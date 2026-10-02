@@ -2,225 +2,53 @@
 
 /* =========================================================
    SOLART SMART
-   IDENTITÉ GLOBALE
-   Énergie solaire au Sénégal
+   RESPONSIVE MOBILE / TABLETTE / PC
    ========================================================= */
 
 :root {
-  /* -------------------------------------------------------
-     COULEURS PRINCIPALES
-     ------------------------------------------------------- */
-
-  --background: #f8fafc;
-  --foreground: #0f172a;
-
   --solart-blue: #1e3a8a;
   --solart-blue-dark: #172554;
-  --solart-blue-light: #dbeafe;
-
   --solart-orange: #f97316;
   --solart-orange-dark: #ea580c;
-  --solart-orange-light: #ffedd5;
-
-  --solart-green: #16a34a;
-
-  /* -------------------------------------------------------
-     COULEURS NEUTRES
-     ------------------------------------------------------- */
-
-  --surface: #ffffff;
-  --surface-soft: #f1f5f9;
-
-  --border: #e2e8f0;
-
-  --muted: #64748b;
-
-  --success: #16a34a;
-  --warning: #f59e0b;
-  --danger: #dc2626;
-
-  /* -------------------------------------------------------
-     RAYONS
-     ------------------------------------------------------- */
-
-  --radius-sm: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.25rem;
-  --radius-2xl: 1.5rem;
-
-  /* -------------------------------------------------------
-     OMBRES
-     ------------------------------------------------------- */
-
-  --shadow-soft:
-    0 4px 20px rgba(15, 23, 42, 0.06);
-
-  --shadow-card:
-    0 10px 30px rgba(15, 23, 42, 0.08);
-
-  --shadow-blue:
-    0 10px 30px rgba(30, 58, 138, 0.15);
-
-  --shadow-orange:
-    0 10px 30px rgba(249, 115, 22, 0.18);
 }
 
-
 /* =========================================================
-   TAILWIND THEME
+   RESET GLOBAL
    ========================================================= */
 
-@theme inline {
-  /* Couleurs générales */
-
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-
-  /* -------------------------------------------------------
-     SOLART
-     ------------------------------------------------------- */
-
-  --color-solart-blue: var(--solart-blue);
-  --color-solart-blue-dark: var(--solart-blue-dark);
-  --color-solart-blue-light: var(--solart-blue-light);
-
-  --color-solart-orange: var(--solart-orange);
-  --color-solart-orange-dark: var(--solart-orange-dark);
-  --color-solart-orange-light: var(--solart-orange-light);
-
-  --color-solart-green: var(--solart-green);
-
-  --color-surface: var(--surface);
-  --color-surface-soft: var(--surface-soft);
-
-  --color-border: var(--border);
-  --color-muted: var(--muted);
-
-  /* -------------------------------------------------------
-     BLEU TAILWIND UTILISÉ PAR LE SITE
-     ------------------------------------------------------- */
-
-  --color-blue-50: #eff6ff;
-  --color-blue-100: #dbeafe;
-  --color-blue-200: #bfdbfe;
-  --color-blue-300: #93c5fd;
-  --color-blue-400: #60a5fa;
-  --color-blue-500: #3b82f6;
-  --color-blue-600: #2563eb;
-  --color-blue-700: #1d4ed8;
-  --color-blue-800: #1e40af;
-  --color-blue-900: #1e3a8a;
-  --color-blue-950: #172554;
-
-  /* -------------------------------------------------------
-     ORANGE TAILWIND UTILISÉ PAR LE SITE
-     ------------------------------------------------------- */
-
-  --color-orange-50: #fff7ed;
-  --color-orange-100: #ffedd5;
-  --color-orange-200: #fed7aa;
-  --color-orange-300: #fdba74;
-  --color-orange-400: #fb923c;
-  --color-orange-500: #f97316;
-  --color-orange-600: #ea580c;
-  --color-orange-700: #c2410c;
-  --color-orange-800: #9a3412;
-  --color-orange-900: #7c2d12;
-  --color-orange-950: #431407;
-
-  /* -------------------------------------------------------
-     SLATE TAILWIND
-     ------------------------------------------------------- */
-
-  --color-slate-50: #f8fafc;
-  --color-slate-100: #f1f5f9;
-  --color-slate-200: #e2e8f0;
-  --color-slate-300: #cbd5e1;
-  --color-slate-400: #94a3b8;
-  --color-slate-500: #64748b;
-  --color-slate-600: #475569;
-  --color-slate-700: #334155;
-  --color-slate-800: #1e293b;
-  --color-slate-900: #0f172a;
-  --color-slate-950: #020617;
-
-  /* -------------------------------------------------------
-     VERT
-     ------------------------------------------------------- */
-
-  --color-green-50: #f0fdf4;
-  --color-green-100: #dcfce7;
-  --color-green-200: #bbf7d0;
-  --color-green-500: #22c55e;
-  --color-green-600: #16a34a;
-  --color-green-700: #15803d;
-  --color-green-800: #166534;
-
-  /* -------------------------------------------------------
-     ROUGE
-     ------------------------------------------------------- */
-
-  --color-red-50: #fef2f2;
-  --color-red-100: #fee2e2;
-  --color-red-200: #fecaca;
-  --color-red-500: #ef4444;
-  --color-red-600: #dc2626;
-  --color-red-700: #b91c1c;
-
-  /* -------------------------------------------------------
-     JAUNE / AMBRE
-     ------------------------------------------------------- */
-
-  --color-yellow-50: #fefce8;
-  --color-yellow-100: #fef9c3;
-  --color-yellow-500: #eab308;
-  --color-yellow-600: #ca8a04;
-
-  --color-amber-50: #fffbeb;
-  --color-amber-100: #fef3c7;
-  --color-amber-500: #f59e0b;
-  --color-amber-600: #d97706;
-
-  /* -------------------------------------------------------
-     POLICE
-     ------------------------------------------------------- */
-
-  --font-sans:
-    Arial,
-    Helvetica,
-    sans-serif;
-}
-
-
-/* =========================================================
-   BASE
-   ========================================================= */
-
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
 html {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  margin: 0;
+  padding: 0;
+
+  overflow-x: hidden;
+
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+
   scroll-behavior: smooth;
 }
 
-html,
 body {
-  min-height: 100%;
-}
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 
-body {
   margin: 0;
+  padding: 0;
 
-  background:
-    radial-gradient(
-      circle at 15% 0%,
-      rgba(219, 234, 254, 0.45),
-      transparent 35%
-    ),
-    #f8fafc;
+  overflow-x: hidden;
 
+  background: #ffffff;
   color: #0f172a;
 
   font-family:
@@ -228,29 +56,323 @@ body {
     Helvetica,
     sans-serif;
 
-  line-height: 1.5;
-
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* =========================================================
+   ÉLÉMENTS MEDIA
+   ========================================================= */
+
+img,
+svg,
+video,
+canvas,
+iframe {
+  display: block;
+  max-width: 100%;
+}
+
+img {
+  height: auto;
+}
+
+/* =========================================================
+   FORMULAIRES
+   ========================================================= */
+
+input,
+textarea,
+select,
+button {
+  max-width: 100%;
+  font: inherit;
+}
+
+input,
+textarea,
+select {
+  min-width: 0;
+  width: 100%;
+}
+
+textarea {
+  resize: vertical;
+}
+
+/*
+   Évite le zoom automatique d'iOS lorsqu'on touche
+   un champ de formulaire.
+*/
+@supports (-webkit-touch-callout: none) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* =========================================================
+   TEXTES
+   ========================================================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+span,
+a,
+li {
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+/* =========================================================
+   FLEX / GRID
+   ========================================================= */
+
+.flex > *,
+.grid > * {
+  min-width: 0;
+}
+
+/* =========================================================
+   LIENS
+   ========================================================= */
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* =========================================================
+   BOUTONS
+   ========================================================= */
+
+button {
+  border: 0;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   IMAGES RESPONSIVES
+   ========================================================= */
+
+img {
+  max-width: 100%;
+}
+
+/* =========================================================
+   CONTENEUR SOLART
+   ========================================================= */
+
+.solart-container {
+  width: 100%;
+  max-width: 1280px;
+
+  margin-left: auto;
+  margin-right: auto;
+
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+/* =========================================================
+   SÉCURITÉ LARGEUR
+   ========================================================= */
+
+.solart-safe-width {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* =========================================================
+   TABLEAUX
+   ========================================================= */
+
+.solart-table-wrapper {
+  width: 100%;
+  max-width: 100%;
+
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* =========================================================
+   CARTES
+   ========================================================= */
+
+.solart-card {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  overflow: hidden;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 24px;
+
+  background: #ffffff;
+}
+
+/* =========================================================
+   IMAGES DANS LES CARTES
+   ========================================================= */
+
+.solart-card img {
+  max-width: 100%;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 767px) {
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+
+    overflow-x: hidden;
+  }
+
+  .solart-container {
+    width: 100%;
+    max-width: 100%;
+
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  /*
+     Les grands titres deviennent automatiquement
+     plus petits sur téléphone.
+  */
+
+  h1 {
+    font-size: clamp(1.9rem, 9vw, 3rem);
+    line-height: 1.08;
+  }
+
+  h2 {
+    font-size: clamp(1.7rem, 8vw, 2.7rem);
+    line-height: 1.1;
+  }
+
+  h3 {
+    font-size: clamp(1.35rem, 6vw, 2.2rem);
+    line-height: 1.15;
+  }
+
+  h4 {
+    max-width: 100%;
+  }
+
+  /*
+     Les boutons ne doivent jamais créer
+     une largeur supérieure à l'écran.
+  */
+
+  button,
+  a {
+    max-width: 100%;
+  }
+}
+
+/* =========================================================
+   PETITS SMARTPHONES
+   ========================================================= */
+
+@media (max-width: 480px) {
+  .solart-container {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  h1 {
+    font-size: clamp(1.75rem, 9vw, 2.4rem);
+  }
+
+  h2 {
+    font-size: clamp(1.55rem, 8vw, 2.1rem);
+  }
+
+  h3 {
+    font-size: clamp(1.25rem, 6vw, 1.8rem);
+  }
+
+  input,
+  textarea,
+  select {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+/* =========================================================
+   TABLETTES
+   ========================================================= */
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .solart-container {
+    width: 100%;
+    max-width: 100%;
+
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+
+/* =========================================================
+   GRAND ÉCRAN
+   ========================================================= */
+
+@media (min-width: 1280px) {
+  .solart-container {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+}
+
+/* =========================================================
+   MODALE
+   ========================================================= */
+
+.solart-modal {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+}
 
 /* =========================================================
    SÉLECTION
    ========================================================= */
 
 ::selection {
-  background: #f97316;
+  background: var(--solart-orange);
   color: #ffffff;
 }
-
 
 /* =========================================================
    SCROLLBAR
    ========================================================= */
 
 ::-webkit-scrollbar {
-  width: 9px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -262,460 +384,10 @@ body {
   border-radius: 999px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #1e3a8a;
-}
-
-
 /* =========================================================
-   LIENS
+   ANCRAGES
    ========================================================= */
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-button,
-a,
-input,
-select,
-textarea {
-  -webkit-tap-highlight-color: transparent;
-}
-
-
-/* =========================================================
-   FORMULAIRES
-   ========================================================= */
-
-input,
-select,
-textarea {
-  font: inherit;
-}
-
-input::placeholder,
-textarea::placeholder {
-  color: #94a3b8;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-  outline: none;
-}
-
-input:not([type="checkbox"]):not([type="radio"]),
-select,
-textarea {
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    background-color 0.2s ease;
-}
-
-input:not([type="checkbox"]):not([type="radio"]):focus,
-select:focus,
-textarea:focus {
-  border-color: #1e3a8a !important;
-
-  box-shadow:
-    0 0 0 3px rgba(30, 58, 138, 0.12);
-}
-
-
-/* =========================================================
-   BOUTONS
-   ========================================================= */
-
-button {
-  font: inherit;
-}
-
-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-
-/* =========================================================
-   CARTES SOLART
-   ========================================================= */
-
-.solart-card {
-  background: #ffffff;
-
-  border: 1px solid #e2e8f0;
-
-  border-radius: 1.25rem;
-
-  box-shadow:
-    0 4px 20px rgba(15, 23, 42, 0.06);
-
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.solart-card:hover {
-  border-color: #cbd5e1;
-
-  box-shadow:
-    0 10px 30px rgba(15, 23, 42, 0.08);
-}
-
-
-/* =========================================================
-   CARTE BLEUE
-   ========================================================= */
-
-.solart-card-blue {
-  background:
-    linear-gradient(
-      135deg,
-      #172554,
-      #1e3a8a
-    );
-
-  color: #ffffff;
-
-  border-radius: 1.25rem;
-
-  box-shadow:
-    0 10px 30px rgba(30, 58, 138, 0.15);
-}
-
-
-/* =========================================================
-   CARTE ORANGE
-   ========================================================= */
-
-.solart-card-orange {
-  background:
-    linear-gradient(
-      135deg,
-      #ea580c,
-      #f97316
-    );
-
-  color: #ffffff;
-
-  border-radius: 1.25rem;
-
-  box-shadow:
-    0 10px 30px rgba(249, 115, 22, 0.18);
-}
-
-
-/* =========================================================
-   BADGES
-   ========================================================= */
-
-.solart-badge {
-  display: inline-flex;
-
-  align-items: center;
-  justify-content: center;
-
-  gap: 0.375rem;
-
-  padding:
-    0.35rem
-    0.7rem;
-
-  border-radius: 999px;
-
-  font-size: 0.75rem;
-
-  font-weight: 700;
-
-  line-height: 1;
-}
-
-.solart-badge-blue {
-  background: #dbeafe;
-  color: #172554;
-}
-
-.solart-badge-orange {
-  background: #ffedd5;
-  color: #ea580c;
-}
-
-.solart-badge-green {
-  background: #dcfce7;
-  color: #166534;
-}
-
-
-/* =========================================================
-   TITRES
-   ========================================================= */
-
-.solart-title {
-  color: #172554;
-
-  font-weight: 800;
-
-  letter-spacing: -0.025em;
-}
-
-.solart-subtitle {
-  color: #64748b;
-
-  line-height: 1.7;
-}
-
-
-/* =========================================================
-   SÉPARATEUR
-   ========================================================= */
-
-.solart-divider {
-  height: 1px;
-
-  width: 100%;
-
-  background:
-    linear-gradient(
-      90deg,
-      transparent,
-      #e2e8f0,
-      transparent
-    );
-}
-
-
-/* =========================================================
-   ICÔNES
-   ========================================================= */
-
-.solart-icon {
-  display: inline-flex;
-
-  align-items: center;
-  justify-content: center;
-
-  width: 2.75rem;
-  height: 2.75rem;
-
-  border-radius: 0.875rem;
-
-  background: #dbeafe;
-
-  color: #1e3a8a;
-
-  flex-shrink: 0;
-}
-
-.solart-icon-orange {
-  background: #ffedd5;
-
-  color: #ea580c;
-}
-
-.solart-icon-green {
-  background: #dcfce7;
-
-  color: #15803d;
-}
-
-
-/* =========================================================
-   ANIMATIONS
-   ========================================================= */
-
-@keyframes solart-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes solart-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.65;
-  }
-}
-
-@keyframes solart-spin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.solart-fade-in {
-  animation:
-    solart-fade-in
-    0.4s
-    ease-out
-    both;
-}
-
-.solart-loading {
-  animation:
-    solart-pulse
-    1.5s
-    ease-in-out
-    infinite;
-}
-
-.solart-spin {
-  animation:
-    solart-spin
-    1s
-    linear
-    infinite;
-}
-
-
-/* =========================================================
-   FOND SOLAIRE
-   ========================================================= */
-
-.solart-solar-bg {
-  position: relative;
-
-  overflow: hidden;
-
-  background:
-    radial-gradient(
-      circle at 80% 10%,
-      rgba(249, 115, 22, 0.18),
-      transparent 30%
-    ),
-    radial-gradient(
-      circle at 10% 80%,
-      rgba(30, 58, 138, 0.15),
-      transparent 35%
-    ),
-    #ffffff;
-}
-
-
-/* =========================================================
-   PAGE ESTIMATION
-   ========================================================= */
-
-.solart-estimation {
-  background:
-    linear-gradient(
-      180deg,
-      #f8fafc 0%,
-      #ffffff 100%
-    );
-}
-
-
-/* =========================================================
-   TABLEAUX
-   ========================================================= */
-
-table {
-  width: 100%;
-
-  border-collapse: collapse;
-}
-
-th {
-  color: #172554;
-
-  font-weight: 700;
-}
-
-td,
-th {
-  border-bottom: 1px solid #e2e8f0;
-
-  padding: 0.75rem;
-}
-
-
-/* =========================================================
-   IMAGES
-   ========================================================= */
-
-img {
-  max-width: 100%;
-}
-
-img,
-svg {
-  vertical-align: middle;
-}
-
-
-/* =========================================================
-   MOBILE
-   ========================================================= */
-
-@media (max-width: 640px) {
-  body {
-    font-size: 15px;
-  }
-
-  .solart-card {
-    border-radius: 1rem;
-  }
-
-  .solart-title {
-    letter-spacing: -0.02em;
-  }
-}
-
-
-/* =========================================================
-   ACCESSIBILITÉ
-   ========================================================= */
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-
-    animation-iteration-count: 1 !important;
-
-    transition-duration: 0.01ms !important;
-
-    scroll-behavior: auto !important;
-  }
-}
-
-
-/* =========================================================
-   MODE SOMBRE
-   DÉSACTIVÉ
-   ========================================================= */
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: light;
-  }
-
-  html,
-  body {
-    background: #f8fafc;
-    color: #0f172a;
-  }
+[id] {
+  scroll-margin-top: 90px;
 }

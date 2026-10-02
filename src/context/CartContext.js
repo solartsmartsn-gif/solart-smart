@@ -1,58 +1,87 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
 
-const CartContext = createContext();
+const CartContext = createContext(null);
 
 export function CartProvider({ children }) {
   const [cart, setCart] = useState([]);
-  const [loaded, setLoaded] = useState(false);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("panier");
-    if (saved) setCart(JSON.parse(saved));
-    setLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    if (loaded) {
-      localStorage.setItem("panier", JSON.stringify(cart));
-    }
-  }, [cart, loaded]);
-
+  // Ajouter un produit au panier
   function addToCart(produit) {
-    setCart((prev) => {
-      const existing = prev.find((item) => item.id === produit.id);
-      if (existing) {
-        return prev.map((item) =>
+    setCart((panierActuel) => {
+      const produitExistant = panierActuel.find(
+        (item) => item.id === produit.id
+      );
+
+      if (produitExistant) {
+        return panierActuel.map((item) =>
           item.id === produit.id
-            ? { ...item, quantite: item.quantite + 1 }
+            ? {
+                ...item,
+                quantite: item.quantite + 1,
+              }
             : item
         );
       }
-      return [...prev, { ...produit, quantite: 1 }];
+
+      return [
+        ...panierActuel,
+        {
+          ...produit,
+          quantite: 1,
+        },
+      ];
     });
   }
 
+  // Supprimer un produit
   function removeFromCart(id) {
-    setCart((prev) => prev.filter((item) => item.id !== id));
-  }
-
-  function updateQuantity(id, quantite) {
-    if (quantite < 1) return;
-    setCart((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, quantite } : item))
+    setCart((panierActuel) =>
+      panierActuel.filter((item) => item.id !== id)
     );
   }
 
+  // Modifier la quantité
+  function updateQuantity(id, quantite) {
+    const nouvelleQuantite = Number(quantite);
+
+    if (nouvelleQuantite <= 0) {
+      removeFromCart(id);
+      return;
+    }
+
+    setCart((panierActuel) =>
+      panierActuel.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              quantite: nouvelleQuantite,
+            }
+          : item
+      )
+    );
+  }
+
+  // Vider complètement le panier
   function clearCart() {
     setCart([]);
   }
 
+  const value = useMemo(
+    () => ({
+      cart,
+      setCart,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+    }),
+    [cart]
+  );
+
   return (
-    <CartContext.Provider
-      value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart }}
-    >
+    <CartContext.Provider value={value}>
       {children}
     </CartContext.Provider>
   );

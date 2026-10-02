@@ -6,8 +6,8 @@ import { supabase } from "@/lib/supabaseClient";
 import CartIcon from "@/components/CartIcon";
 import ProductCard from "@/components/ProductCard";
 
-const WHATSAPP = "221787110707";
-const EMAIL = "solartsmart.sn@gmail.com";
+const WHATSAPP = "221785932525";
+const EMAIL = "galsenenergy221@gmail.com";
 
 export default function Home() {
   const [produits, setProduits] = useState([]);
@@ -31,12 +31,10 @@ export default function Home() {
 
       if (supabaseError) {
         console.error("Erreur Supabase :", supabaseError);
-
         setError(
           supabaseError.message ||
             "Impossible de charger les produits."
         );
-
         setProduits([]);
         return;
       }
@@ -170,7 +168,9 @@ export default function Home() {
     if (Array.isArray(source)) {
       return source
         .map((item) => {
-          if (typeof item === "string") return item;
+          if (typeof item === "string") {
+            return item;
+          }
 
           if (item && typeof item === "object") {
             return (
@@ -198,7 +198,9 @@ export default function Home() {
         if (Array.isArray(parsed)) {
           return parsed
             .map((item) => {
-              if (typeof item === "string") return item;
+              if (typeof item === "string") {
+                return item;
+              }
 
               if (item && typeof item === "object") {
                 return (
@@ -215,7 +217,7 @@ export default function Home() {
             .filter(Boolean);
         }
       } catch {
-        // Ce n'est pas du JSON, on continue normalement.
+        // Texte normal.
       }
 
       return texte
@@ -332,21 +334,22 @@ export default function Home() {
   );
 
   return (
-    <main className="min-h-screen bg-white text-slate-900">
+    <main className="min-h-screen w-full min-w-0 overflow-x-hidden bg-white text-slate-900">
 
       {/* =====================================================
           HEADER
-      ====================================================== */}
+      ===================================================== */}
 
-      <header className="sticky top-0 z-[100] border-b border-slate-200/70 bg-white/90 shadow-sm backdrop-blur-2xl">
+      <header className="sticky top-0 z-[100] w-full border-b border-slate-200/70 bg-white/95 shadow-sm backdrop-blur-2xl">
 
-        <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-[68px] w-full max-w-7xl min-w-0 items-center justify-between px-4 sm:h-[76px] sm:px-6 lg:px-8">
 
           <a
             href="#accueil"
-            className="group flex items-center gap-3"
+            className="group flex min-w-0 items-center gap-2.5 sm:gap-3"
           >
-            <div className="relative h-11 w-11 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition duration-300 group-hover:scale-105 group-hover:shadow-md">
+
+            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm sm:h-11 sm:w-11 sm:rounded-2xl">
               <Image
                 src="/logo.png"
                 alt="Solart Smart"
@@ -356,23 +359,29 @@ export default function Home() {
               />
             </div>
 
-            <div className="leading-none">
-              <h1 className="text-xl font-black tracking-tight">
+            <div className="min-w-0 leading-none">
+
+              <h1 className="truncate text-lg font-black tracking-tight sm:text-xl">
                 <span className="text-blue-800">
                   Solart
                 </span>
+
                 <span className="text-orange-500">
                   {" "}Smart
                 </span>
               </h1>
 
-              <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400">
+              <p className="mt-1 truncate text-[8px] font-bold uppercase tracking-[0.15em] text-slate-400 sm:text-[9px] sm:tracking-[0.2em]">
                 Énergie solaire
               </p>
+
             </div>
+
           </a>
 
-          <nav className="hidden items-center gap-1 md:flex">
+          {/* NAVIGATION DESKTOP */}
+
+          <nav className="hidden min-w-0 items-center gap-1 md:flex">
 
             <NavLink href="#accueil" active>
               Accueil
@@ -393,15 +402,15 @@ export default function Home() {
               Estimation
             </a>
 
-            <div className="mx-2 h-7 w-px bg-slate-200" />
+            <div className="mx-2 h-7 w-px shrink-0 bg-slate-200" />
 
-            <div className="rounded-xl p-1">
+            <div className="shrink-0 rounded-xl p-1">
               <CartIcon />
             </div>
 
             <a
               href="#contact"
-              className="ml-2 inline-flex items-center gap-2 rounded-full bg-blue-800 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-900/10 transition hover:-translate-y-0.5 hover:bg-blue-900"
+              className="ml-2 inline-flex shrink-0 items-center gap-2 rounded-full bg-blue-800 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-900/10 transition hover:-translate-y-0.5 hover:bg-blue-900"
             >
               Contact
               <span className="text-orange-400">
@@ -411,16 +420,26 @@ export default function Home() {
 
           </nav>
 
-          <div className="flex items-center gap-2 md:hidden">
+          {/* MOBILE */}
 
-            <CartIcon />
+          <div className="flex shrink-0 items-center gap-2 md:hidden">
+
+            <div className="shrink-0">
+              <CartIcon />
+            </div>
 
             <button
+              type="button"
               onClick={() =>
                 setMobileMenu((value) => !value)
               }
-              aria-label="Menu"
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-xl text-blue-900"
+              aria-label={
+                mobileMenu
+                  ? "Fermer le menu"
+                  : "Ouvrir le menu"
+              }
+              aria-expanded={mobileMenu}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xl font-bold text-blue-900"
             >
               {mobileMenu ? "×" : "☰"}
             </button>
@@ -429,10 +448,12 @@ export default function Home() {
 
         </div>
 
-        {mobileMenu && (
-          <div className="border-t border-slate-100 bg-white px-5 py-4 md:hidden">
+        {/* MENU MOBILE */}
 
-            <div className="mx-auto flex max-w-7xl flex-col gap-1">
+        {mobileMenu && (
+          <div className="border-t border-slate-100 bg-white px-4 py-3 md:hidden">
+
+            <div className="mx-auto flex w-full max-w-7xl flex-col gap-1">
 
               {[
                 ["#accueil", "Accueil"],
@@ -444,8 +465,10 @@ export default function Home() {
                 <a
                   key={label}
                   href={href}
-                  onClick={() => setMobileMenu(false)}
-                  className="rounded-xl px-4 py-3 text-sm font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-800"
+                  onClick={() =>
+                    setMobileMenu(false)
+                  }
+                  className="rounded-xl px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-blue-50 hover:text-blue-800"
                 >
                   {label}
                 </a>
@@ -455,12 +478,16 @@ export default function Home() {
                 href={`https://wa.me/${WHATSAPP}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() =>
+                  setMobileMenu(false)
+                }
                 className="mt-2 rounded-xl bg-green-500 px-4 py-3 text-center text-sm font-bold text-white"
               >
                 WhatsApp
               </a>
 
             </div>
+
           </div>
         )}
 
@@ -468,19 +495,19 @@ export default function Home() {
 
       {/* =====================================================
           HERO
-      ====================================================== */}
+      ===================================================== */}
 
       <section
         id="accueil"
-        className="relative overflow-hidden bg-slate-950"
+        className="relative w-full overflow-hidden bg-slate-950"
       >
 
-        <div className="absolute -right-40 -top-40 h-[500px] w-[500px] rounded-full bg-blue-600/20 blur-3xl" />
+        <div className="absolute -right-40 -top-40 h-[400px] w-[400px] rounded-full bg-blue-600/20 blur-3xl sm:h-[500px] sm:w-[500px]" />
 
-        <div className="absolute -bottom-40 -left-40 h-[500px] w-[500px] rounded-full bg-orange-500/10 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 h-[400px] w-[400px] rounded-full bg-orange-500/10 blur-3xl sm:h-[500px] sm:w-[500px]" />
 
         <div
-          className="absolute inset-0 opacity-[0.035]"
+          className="pointer-events-none absolute inset-0 opacity-[0.035]"
           style={{
             backgroundImage:
               "linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)",
@@ -488,24 +515,24 @@ export default function Home() {
           }}
         />
 
-        <div className="relative mx-auto grid max-w-7xl items-center gap-16 px-6 py-20 sm:py-24 lg:grid-cols-2 lg:px-8 lg:py-32">
+        <div className="relative mx-auto grid w-full max-w-7xl min-w-0 items-center gap-12 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-2 lg:gap-16 lg:px-8 lg:py-32">
 
-          <div className="max-w-2xl">
+          <div className="min-w-0 max-w-2xl">
 
-            <div className="mb-7 inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 backdrop-blur-xl">
+            <div className="mb-6 inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-2 backdrop-blur-xl sm:mb-7 sm:gap-3 sm:px-4">
 
-              <span className="relative flex h-2.5 w-2.5">
+              <span className="relative flex h-2.5 w-2.5 shrink-0">
                 <span className="absolute h-2.5 w-2.5 animate-ping rounded-full bg-orange-400 opacity-60" />
                 <span className="relative h-2.5 w-2.5 rounded-full bg-orange-400" />
               </span>
 
-              <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-blue-100">
+              <span className="truncate text-[9px] font-bold uppercase tracking-[0.12em] text-blue-100 sm:text-[11px] sm:tracking-[0.18em]">
                 Solutions solaires au Sénégal
               </span>
 
             </div>
 
-            <h2 className="text-4xl font-black leading-[1.04] tracking-tight text-white sm:text-5xl lg:text-7xl">
+            <h2 className="break-words text-[2.5rem] font-black leading-[1.04] tracking-tight text-white sm:text-5xl lg:text-7xl">
 
               Votre énergie.
 
@@ -515,19 +542,19 @@ export default function Home() {
 
             </h2>
 
-            <p className="mt-7 max-w-xl text-base leading-8 text-slate-300 sm:text-lg">
+            <p className="mt-6 max-w-xl text-base leading-7 text-slate-300 sm:mt-7 sm:text-lg sm:leading-8">
               Solart Smart conçoit des solutions solaires adaptées à votre
               quotidien : kits solaires résidentiels, équipements et systèmes
               de pompage solaire.
             </p>
 
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-8 flex w-full flex-col gap-3 sm:mt-9 sm:flex-row">
 
               <a
                 href={`https://wa.me/${WHATSAPP}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-3 rounded-full bg-orange-500 px-7 py-4 text-sm font-extrabold text-white shadow-xl shadow-orange-900/20 transition hover:-translate-y-1 hover:bg-orange-600"
+                className="inline-flex w-full items-center justify-center gap-3 rounded-full bg-orange-500 px-6 py-4 text-sm font-extrabold text-white shadow-xl shadow-orange-900/20 transition hover:-translate-y-1 hover:bg-orange-600 sm:w-auto sm:px-7"
               >
                 Discuter sur WhatsApp
                 <span>→</span>
@@ -535,14 +562,14 @@ export default function Home() {
 
               <a
                 href="#produits"
-                className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/[0.06] px-7 py-4 text-sm font-bold text-white backdrop-blur-md transition hover:-translate-y-1 hover:bg-white/10"
+                className="inline-flex w-full items-center justify-center rounded-full border border-white/15 bg-white/[0.06] px-6 py-4 text-sm font-bold text-white backdrop-blur-md transition hover:-translate-y-1 hover:bg-white/10 sm:w-auto sm:px-7"
               >
                 Découvrir nos produits
               </a>
 
             </div>
 
-            <div className="mt-12 grid max-w-xl grid-cols-3 border-t border-white/10 pt-7">
+            <div className="mt-10 grid w-full max-w-xl grid-cols-3 border-t border-white/10 pt-6 sm:mt-12 sm:pt-7">
 
               <Stat
                 value="100%"
@@ -565,11 +592,13 @@ export default function Home() {
 
           </div>
 
-          <div className="relative hidden lg:block">
+          {/* VISUEL DESKTOP */}
+
+          <div className="relative hidden min-w-0 lg:block">
 
             <div className="absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-500/20 blur-3xl" />
 
-            <div className="relative mx-auto max-w-lg">
+            <div className="relative mx-auto w-full max-w-lg">
 
               <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.07] p-3 shadow-2xl backdrop-blur-xl">
 
@@ -659,18 +688,18 @@ export default function Home() {
 
       {/* =====================================================
           SERVICES
-      ====================================================== */}
+      ===================================================== */}
 
       <section
         id="services"
-        className="relative overflow-hidden bg-slate-50 px-6 py-24 lg:py-28"
+        className="relative w-full overflow-hidden bg-slate-50 px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-28"
       >
 
         <div className="absolute -left-32 top-20 h-72 w-72 rounded-full bg-blue-100/60 blur-3xl" />
 
         <div className="absolute -right-32 bottom-20 h-72 w-72 rounded-full bg-orange-100/50 blur-3xl" />
 
-        <div className="relative mx-auto max-w-7xl">
+        <div className="relative mx-auto w-full max-w-7xl min-w-0">
 
           <SectionHeading
             eyebrow="Nos solutions"
@@ -679,7 +708,7 @@ export default function Home() {
             description="Des solutions conçues pour les particuliers, les habitations et les exploitations au Sénégal."
           />
 
-          <div className="mt-16 grid gap-7 lg:grid-cols-2">
+          <div className="mt-10 grid min-w-0 gap-5 sm:mt-16 sm:gap-7 lg:grid-cols-2">
 
             <ServiceCard
               href="#produits"
@@ -706,28 +735,28 @@ export default function Home() {
 
       {/* =====================================================
           PRODUITS
-      ====================================================== */}
+      ===================================================== */}
 
       <section
         id="produits"
-        className="relative overflow-hidden bg-white px-6 py-24 lg:py-28"
+        className="relative w-full overflow-hidden bg-white px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-28"
       >
 
         <div className="absolute -right-40 top-20 h-96 w-96 rounded-full bg-blue-50 blur-3xl" />
 
         <div className="absolute -left-40 bottom-10 h-96 w-96 rounded-full bg-orange-50 blur-3xl" />
 
-        <div className="relative mx-auto max-w-7xl">
+        <div className="relative mx-auto w-full max-w-7xl min-w-0">
 
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="flex min-w-0 flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
 
-            <div className="max-w-2xl">
+            <div className="min-w-0 max-w-2xl">
 
-              <span className="inline-flex items-center rounded-full bg-blue-50 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.18em] text-blue-800">
+              <span className="inline-flex rounded-full bg-blue-50 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.18em] text-blue-800">
                 Notre catalogue
               </span>
 
-              <h3 className="mt-5 text-3xl font-black tracking-tight text-blue-950 sm:text-4xl lg:text-5xl">
+              <h3 className="mt-5 break-words text-3xl font-black tracking-tight text-blue-950 sm:text-4xl lg:text-5xl">
                 Nos solutions
                 <span className="block text-orange-500">
                   solaires.
@@ -742,7 +771,7 @@ export default function Home() {
             </div>
 
             {!loading && !error && (
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
+              <div className="w-full shrink-0 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 lg:w-auto">
 
                 <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
                   Catalogue
@@ -765,19 +794,19 @@ export default function Home() {
           {/* CHARGEMENT */}
 
           {loading && (
-            <div className="mt-14">
+            <div className="mt-10 sm:mt-14">
 
-              <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid min-w-0 gap-5 sm:grid-cols-2 sm:gap-7 lg:grid-cols-3">
 
                 {[1, 2, 3].map((item) => (
                   <div
                     key={item}
-                    className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm"
+                    className="min-w-0 overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm"
                   >
 
-                    <div className="h-64 animate-pulse bg-slate-100" />
+                    <div className="h-52 animate-pulse bg-slate-100 sm:h-64" />
 
-                    <div className="space-y-4 p-6">
+                    <div className="space-y-4 p-5 sm:p-6">
 
                       <div className="h-3 w-24 animate-pulse rounded-full bg-slate-100" />
 
@@ -796,9 +825,9 @@ export default function Home() {
 
               <div className="mt-7 text-center">
 
-                <span className="inline-flex items-center gap-3 rounded-full bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-500">
+                <span className="inline-flex max-w-full items-center gap-3 rounded-full bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-500">
 
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-blue-700" />
+                  <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-slate-300 border-t-blue-700" />
 
                   Chargement des solutions...
 
@@ -812,7 +841,7 @@ export default function Home() {
           {/* ERREUR */}
 
           {!loading && error && (
-            <div className="mx-auto mt-14 max-w-2xl rounded-[2rem] border border-red-200 bg-red-50 p-8 text-center">
+            <div className="mx-auto mt-10 w-full max-w-2xl rounded-[2rem] border border-red-200 bg-red-50 p-6 text-center sm:mt-14 sm:p-8">
 
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-red-100 text-2xl text-red-600">
                 !
@@ -822,22 +851,22 @@ export default function Home() {
                 Impossible de charger les produits
               </h4>
 
-              <p className="mt-2 text-sm leading-6 text-red-600">
+              <p className="mt-2 break-words text-sm leading-6 text-red-600">
                 {error}
               </p>
 
               <button
+                type="button"
                 onClick={chargerProduits}
                 className="mt-6 rounded-full bg-red-600 px-7 py-3 text-sm font-bold text-white transition hover:bg-red-700"
               >
                 Réessayer
               </button>
 
-              <p className="mt-5 text-xs text-red-400">
+              <p className="mt-5 text-xs leading-5 text-red-400">
                 Vérifiez également que la table{" "}
-                <strong>produits</strong> existe dans
-                Supabase et que sa politique RLS autorise la lecture
-                publique.
+                <strong>produits</strong> existe dans Supabase
+                et que sa politique RLS autorise la lecture publique.
               </p>
 
             </div>
@@ -848,7 +877,7 @@ export default function Home() {
           {!loading &&
             !error &&
             produits.length === 0 && (
-              <div className="mx-auto mt-14 max-w-2xl rounded-[2rem] border border-dashed border-slate-300 bg-slate-50 p-10 text-center sm:p-14">
+              <div className="mx-auto mt-10 w-full max-w-2xl rounded-[2rem] border border-dashed border-slate-300 bg-slate-50 p-7 text-center sm:mt-14 sm:p-14">
 
                 <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-blue-100 text-4xl">
                   ☀️
@@ -864,6 +893,7 @@ export default function Home() {
                 </p>
 
                 <button
+                  type="button"
                   onClick={chargerProduits}
                   className="mt-7 rounded-full bg-blue-800 px-7 py-3 text-sm font-bold text-white transition hover:bg-blue-900"
                 >
@@ -878,7 +908,7 @@ export default function Home() {
           {!loading &&
             !error &&
             produits.length > 0 && (
-              <div className="mt-14 grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-10 grid min-w-0 gap-5 sm:mt-14 sm:grid-cols-2 sm:gap-7 lg:grid-cols-3">
 
                 {produits.map((produit, index) => {
 
@@ -892,26 +922,34 @@ export default function Home() {
                         produit.id ||
                         `${nom}-${index}`
                       }
-                      className="group relative overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm transition duration-500 hover:-translate-y-2 hover:border-blue-200 hover:shadow-2xl"
+                      className="group relative min-w-0 overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm transition duration-500 hover:-translate-y-2 hover:border-blue-200 hover:shadow-2xl"
                     >
 
-                      <div className="absolute left-4 top-4 z-20">
-                        <span className="rounded-full border border-white/70 bg-white/90 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-blue-900 shadow-sm backdrop-blur">
+                      <div className="absolute left-3 top-3 z-20 sm:left-4 sm:top-4">
+
+                        <span className="inline-block max-w-[calc(100vw-5rem)] truncate rounded-full border border-white/70 bg-white/90 px-3 py-1.5 text-[9px] font-extrabold uppercase tracking-wider text-blue-900 shadow-sm backdrop-blur sm:max-w-[250px] sm:text-[10px]">
                           {categorie}
                         </span>
+
                       </div>
 
-                      <div className="relative overflow-hidden">
+                      {/* Produit */}
+
+                      <div className="min-w-0 overflow-hidden [&>div]:!rounded-none [&>div]:!border-0 [&>div]:!shadow-none">
+
                         <ProductCard produit={produit} />
+
                       </div>
 
-                      <div className="border-t border-slate-100 bg-white p-5">
+                      {/* Informations */}
 
-                        <div className="flex items-start justify-between gap-3">
+                      <div className="border-t border-slate-100 bg-white p-4 sm:p-5">
 
-                          <div className="min-w-0">
+                        <div className="flex min-w-0 items-start justify-between gap-3">
 
-                            <h4 className="truncate text-lg font-black text-blue-950">
+                          <div className="min-w-0 flex-1">
+
+                            <h4 className="break-words text-base font-black text-blue-950 sm:text-lg">
                               {nom}
                             </h4>
 
@@ -923,7 +961,7 @@ export default function Home() {
 
                           </div>
 
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-800 transition group-hover:bg-orange-500 group-hover:text-white">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-800 transition group-hover:bg-orange-500 group-hover:text-white sm:h-10 sm:w-10">
                             →
                           </div>
 
@@ -934,7 +972,7 @@ export default function Home() {
                           onClick={() =>
                             setSelectedProduct(produit)
                           }
-                          className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 py-3.5 text-sm font-bold text-white transition hover:bg-blue-800"
+                          className="mt-4 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-sm font-bold text-white transition hover:bg-blue-800 sm:mt-5"
                         >
                           Voir les détails du kit
                           <span>→</span>
@@ -954,17 +992,17 @@ export default function Home() {
           {!loading &&
             !error &&
             produits.length > 0 && (
-              <div className="mt-14 overflow-hidden rounded-[2rem] bg-gradient-to-r from-blue-950 via-blue-900 to-blue-800 p-7 shadow-xl sm:p-9">
+              <div className="mt-10 overflow-hidden rounded-[2rem] bg-gradient-to-r from-blue-950 via-blue-900 to-blue-800 p-5 shadow-xl sm:mt-14 sm:p-9">
 
-                <div className="flex flex-col items-center justify-between gap-6 text-center sm:flex-row sm:text-left">
+                <div className="flex flex-col items-center justify-between gap-5 text-center sm:flex-row sm:text-left">
 
-                  <div className="flex items-center gap-4">
+                  <div className="flex min-w-0 items-center gap-3 sm:gap-4">
 
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-orange-500 text-2xl shadow-lg">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-orange-500 text-2xl shadow-lg sm:h-14 sm:w-14">
                       ☀️
                     </div>
 
-                    <div>
+                    <div className="min-w-0">
 
                       <p className="font-black text-white">
                         Besoin d'une solution personnalisée ?
@@ -980,7 +1018,7 @@ export default function Home() {
 
                   <a
                     href="/estimation"
-                    className="rounded-full bg-orange-500 px-7 py-3.5 text-sm font-bold text-white transition hover:bg-orange-600"
+                    className="inline-flex min-h-[48px] w-full shrink-0 items-center justify-center rounded-full bg-orange-500 px-6 py-3.5 text-sm font-bold text-white transition hover:bg-orange-600 sm:w-auto sm:px-7"
                   >
                     Estimer ma consommation
                   </a>
@@ -995,26 +1033,26 @@ export default function Home() {
 
       {/* =====================================================
           CONTACT
-      ====================================================== */}
+      ===================================================== */}
 
       <section
         id="contact"
-        className="relative overflow-hidden bg-blue-950 px-6 py-24 lg:py-28"
+        className="relative w-full overflow-hidden bg-blue-950 px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-28"
       >
 
         <div className="absolute -right-40 -top-40 h-96 w-96 rounded-full bg-orange-500/10 blur-3xl" />
 
-        <div className="relative mx-auto max-w-7xl">
+        <div className="relative mx-auto w-full max-w-7xl min-w-0">
 
-          <div className="grid overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.05] shadow-2xl backdrop-blur-xl lg:grid-cols-2">
+          <div className="grid min-w-0 overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.05] shadow-2xl backdrop-blur-xl lg:grid-cols-2">
 
-            <div className="p-8 sm:p-12 lg:p-14">
+            <div className="min-w-0 p-6 sm:p-10 lg:p-14">
 
               <span className="inline-flex rounded-full bg-orange-500/10 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.18em] text-orange-400">
                 Contactez-nous
               </span>
 
-              <h3 className="mt-6 text-3xl font-black leading-tight text-white sm:text-4xl lg:text-5xl">
+              <h3 className="mt-6 break-words text-3xl font-black leading-tight text-white sm:text-4xl lg:text-5xl">
                 Parlons de votre
                 <span className="block text-orange-400">
                   projet solaire.
@@ -1027,13 +1065,13 @@ export default function Home() {
                 pour échanger sur votre projet.
               </p>
 
-              <div className="mt-10 space-y-4">
+              <div className="mt-8 space-y-4 sm:mt-10">
 
                 <ContactItem
                   href={`https://wa.me/${WHATSAPP}`}
                   icon="◉"
                   title="WhatsApp"
-                  value="+221 78 711 07 07"
+                  value="+221 78 593 25 25"
                   green
                 />
 
@@ -1044,19 +1082,19 @@ export default function Home() {
                   value={EMAIL}
                 />
 
-                <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.05] p-4">
+                <div className="flex min-w-0 items-start gap-4 rounded-2xl border border-white/10 bg-white/[0.05] p-4">
 
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-xl text-white">
                     📍
                   </div>
 
-                  <div>
+                  <div className="min-w-0">
 
                     <p className="text-xs font-bold uppercase tracking-wider text-blue-300">
                       Adresse
                     </p>
 
-                    <p className="mt-1 font-bold leading-6 text-white">
+                    <p className="mt-1 break-words font-bold leading-6 text-white">
                       Pikine Icotaf 3,
                       <br />
                       Tally Mbaye Gakou,
@@ -1072,17 +1110,17 @@ export default function Home() {
 
             </div>
 
-            <div className="relative flex min-h-[500px] items-center justify-center overflow-hidden bg-gradient-to-br from-blue-900 to-blue-800 p-8 sm:p-12">
+            <div className="relative flex min-h-[420px] min-w-0 items-center justify-center overflow-hidden bg-gradient-to-br from-blue-900 to-blue-800 p-5 sm:min-h-[500px] sm:p-10">
 
               <div className="relative w-full max-w-md">
 
-                <div className="rounded-[2rem] border border-white/10 bg-white/[0.08] p-7 shadow-2xl backdrop-blur-xl sm:p-9">
+                <div className="rounded-[2rem] border border-white/10 bg-white/[0.08] p-6 shadow-2xl backdrop-blur-xl sm:p-9">
 
                   <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-500 text-3xl shadow-lg">
                     ☀️
                   </div>
 
-                  <h4 className="mt-7 text-2xl font-black text-white sm:text-3xl">
+                  <h4 className="mt-7 break-words text-2xl font-black text-white sm:text-3xl">
                     Votre projet commence ici.
                   </h4>
 
@@ -1096,7 +1134,7 @@ export default function Home() {
                     href={`https://wa.me/${WHATSAPP}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-8 flex w-full items-center justify-center gap-3 rounded-full bg-green-500 px-6 py-4 font-extrabold text-white shadow-lg transition hover:-translate-y-1 hover:bg-green-600"
+                    className="mt-8 flex min-h-[52px] w-full items-center justify-center gap-3 rounded-full bg-green-500 px-6 py-4 font-extrabold text-white shadow-lg transition hover:-translate-y-1 hover:bg-green-600"
                   >
                     Discuter sur WhatsApp
                     <span>→</span>
@@ -1125,20 +1163,21 @@ export default function Home() {
             </div>
 
           </div>
+
         </div>
       </section>
 
       {/* =====================================================
           FOOTER
-      ====================================================== */}
+      ===================================================== */}
 
-      <footer className="bg-slate-950 text-white">
+      <footer className="w-full bg-slate-950 text-white">
 
-        <div className="mx-auto max-w-7xl px-6 py-14 lg:px-8">
+        <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
 
-          <div className="grid gap-10 border-b border-white/10 pb-10 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid min-w-0 gap-10 border-b border-white/10 pb-10 md:grid-cols-2 lg:grid-cols-3">
 
-            <div>
+            <div className="min-w-0">
 
               <a
                 href="#accueil"
@@ -1147,6 +1186,7 @@ export default function Home() {
                 <span className="text-blue-400">
                   Solart
                 </span>
+
                 <span className="text-orange-500">
                   {" "}Smart
                 </span>
@@ -1161,7 +1201,7 @@ export default function Home() {
                 href={`https://wa.me/${WHATSAPP}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-6 inline-flex items-center gap-2 rounded-full bg-green-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-green-600"
+                className="mt-6 inline-flex min-h-[46px] items-center gap-2 rounded-full bg-green-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-green-600"
               >
                 ◉ WhatsApp
               </a>
@@ -1196,7 +1236,7 @@ export default function Home() {
 
             </div>
 
-            <div>
+            <div className="min-w-0">
 
               <h3 className="text-sm font-bold uppercase tracking-wider">
                 Contact
@@ -1205,10 +1245,12 @@ export default function Home() {
               <div className="mt-5 space-y-4 text-sm text-slate-400">
 
                 <a
-                  href={`tel:+${WHATSAPP}`}
+                  href={`https://wa.me/${WHATSAPP}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="block transition hover:text-orange-400"
                 >
-                  +221 78 711 07 07
+                  +221 78 593 25 25
                 </a>
 
                 <a
@@ -1249,11 +1291,12 @@ export default function Home() {
           </div>
 
         </div>
+
       </footer>
 
       {/* =====================================================
-          MODALE DÉTAILS PRODUIT
-      ====================================================== */}
+          MODALE PRODUIT
+      ===================================================== */}
 
       {selectedProduct && (
         <ProductDetailsModal
@@ -1307,17 +1350,17 @@ function NavLink({ href, children, active = false }) {
 function Stat({ value, label, border }) {
   return (
     <div
-      className={`pr-4 ${
+      className={`min-w-0 pr-2 ${
         border
-          ? "border-l border-white/10 px-4"
+          ? "border-l border-white/10 pl-2 sm:px-4"
           : ""
       }`}
     >
-      <p className="text-2xl font-black text-white sm:text-3xl">
+      <p className="break-words text-xl font-black text-white sm:text-3xl">
         {value}
       </p>
 
-      <p className="mt-1 text-xs leading-5 text-slate-400 sm:text-sm">
+      <p className="mt-1 break-words text-[10px] leading-4 text-slate-400 sm:text-sm sm:leading-5">
         {label}
       </p>
     </div>
@@ -1348,7 +1391,6 @@ function FloatingBadge({
         </div>
 
         <div>
-
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
             SOLAIRE
           </p>
@@ -1356,7 +1398,6 @@ function FloatingBadge({
           <p className="text-sm font-black text-blue-950">
             {label}
           </p>
-
         </div>
 
       </div>
@@ -1375,13 +1416,13 @@ function SectionHeading({
   description,
 }) {
   return (
-    <div className="mx-auto max-w-3xl text-center">
+    <div className="mx-auto w-full max-w-3xl text-center">
 
-      <span className="inline-flex rounded-full bg-orange-100 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.18em] text-orange-600">
+      <span className="inline-flex max-w-full rounded-full bg-orange-100 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.14em] text-orange-600 sm:tracking-[0.18em]">
         {eyebrow}
       </span>
 
-      <h3 className="mt-5 text-3xl font-black tracking-tight text-blue-950 sm:text-4xl lg:text-5xl">
+      <h3 className="mt-5 break-words text-3xl font-black tracking-tight text-blue-950 sm:text-4xl lg:text-5xl">
 
         {title}
 
@@ -1416,11 +1457,11 @@ function ServiceCard({
   return (
     <a
       href={href}
-      className="group overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm transition duration-500 hover:-translate-y-2 hover:shadow-2xl"
+      className="group min-w-0 overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm transition duration-500 hover:-translate-y-2 hover:shadow-2xl"
     >
 
       <div
-        className={`relative h-64 overflow-hidden ${
+        className={`relative h-52 overflow-hidden sm:h-64 ${
           isOrange
             ? "bg-gradient-to-br from-blue-950 via-blue-900 to-blue-700"
             : "bg-gradient-to-br from-blue-950 via-blue-800 to-cyan-700"
@@ -1429,53 +1470,53 @@ function ServiceCard({
 
         <div className="absolute -right-20 -top-20 h-60 w-60 rounded-full bg-white/10 blur-3xl" />
 
-        <div className="absolute left-7 top-7">
+        <div className="absolute left-5 top-5 sm:left-7 sm:top-7">
 
-          <span className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white backdrop-blur-md">
+          <span className="rounded-full border border-white/20 bg-white/10 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-md sm:px-4 sm:text-xs">
             {type}
           </span>
 
         </div>
 
-        <div className="absolute bottom-7 left-1/2 flex h-32 w-64 -translate-x-1/2 items-center justify-center rounded-2xl border border-white/20 bg-white/[0.08] text-6xl shadow-2xl backdrop-blur-md transition duration-500 group-hover:scale-105">
+        <div className="absolute bottom-5 left-1/2 flex h-28 w-[75%] max-w-xs -translate-x-1/2 items-center justify-center rounded-2xl border border-white/20 bg-white/[0.08] text-5xl shadow-2xl backdrop-blur-md transition duration-500 group-hover:scale-105 sm:bottom-7 sm:h-32 sm:text-6xl">
           {icon}
         </div>
 
       </div>
 
-      <div className="p-8">
+      <div className="min-w-0 p-5 sm:p-8">
 
-        <div className="flex items-start justify-between gap-5">
+        <div className="flex min-w-0 items-start justify-between gap-4">
 
-          <div>
+          <div className="min-w-0">
 
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-orange-500">
               {type}
             </p>
 
-            <h4 className="mt-2 text-2xl font-black text-blue-950 sm:text-3xl">
+            <h4 className="mt-2 break-words text-2xl font-black text-blue-950 sm:text-3xl">
               {title}
             </h4>
 
           </div>
 
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-50 text-lg text-blue-800 transition group-hover:bg-orange-500 group-hover:text-white">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-lg text-blue-800 transition group-hover:bg-orange-500 group-hover:text-white sm:h-11 sm:w-11">
             →
           </div>
 
         </div>
 
-        <p className="mt-5 leading-7 text-slate-600">
+        <p className="mt-5 break-words leading-7 text-slate-600">
           {description}
         </p>
 
-        <div className="mt-7 flex items-center justify-between border-t border-slate-100 pt-6">
+        <div className="mt-6 flex items-center justify-between gap-3 border-t border-slate-100 pt-5 sm:mt-7 sm:pt-6">
 
           <span className="text-sm font-bold text-blue-800">
             Découvrir la solution
           </span>
 
-          <span className="text-xl text-orange-500 transition group-hover:translate-x-2">
+          <span className="shrink-0 text-xl text-orange-500 transition group-hover:translate-x-2">
             →
           </span>
 
@@ -1510,11 +1551,11 @@ function ContactItem({
           ? "noopener noreferrer"
           : undefined
       }
-      className="group flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.05] p-4 transition hover:bg-white/[0.1]"
+      className="group flex min-w-0 items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.05] p-3 transition hover:bg-white/[0.1] sm:gap-4 sm:p-4"
     >
 
       <div
-        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-xl text-white ${
+        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-xl text-white sm:h-12 sm:w-12 ${
           green
             ? "bg-green-500"
             : "bg-orange-500"
@@ -1529,13 +1570,13 @@ function ContactItem({
           {title}
         </p>
 
-        <p className="mt-1 break-all font-bold text-white">
+        <p className="mt-1 break-all text-sm font-bold text-white sm:text-base">
           {value}
         </p>
 
       </div>
 
-      <span className="text-xl text-orange-400 transition group-hover:translate-x-1">
+      <span className="shrink-0 text-xl text-orange-400 transition group-hover:translate-x-1">
         →
       </span>
 
@@ -1551,11 +1592,11 @@ function CheckLine({ children }) {
   return (
     <div className="mt-3 flex items-center gap-3">
 
-      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-green-400/10 text-green-400">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-400/10 text-green-400">
         ✓
       </span>
 
-      <p className="text-sm font-medium text-blue-100">
+      <p className="min-w-0 text-sm font-medium text-blue-100">
         {children}
       </p>
 
@@ -1571,7 +1612,7 @@ function FooterLink({ href, children }) {
   return (
     <a
       href={href}
-      className="block text-sm text-slate-400 transition hover:text-orange-400"
+      className="block py-0.5 text-sm text-slate-400 transition hover:text-orange-400"
     >
       {children}
     </a>
@@ -1632,7 +1673,7 @@ function ProductDetailsModal({
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-end justify-center bg-slate-950/70 p-0 backdrop-blur-md sm:items-center sm:p-6"
+      className="fixed inset-0 z-[200] flex items-end justify-center overflow-hidden bg-slate-950/70 p-0 backdrop-blur-md sm:items-center sm:p-4 md:p-6"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) {
           onClose();
@@ -1640,19 +1681,19 @@ function ProductDetailsModal({
       }}
     >
 
-      <div className="relative max-h-[94vh] w-full max-w-5xl overflow-y-auto rounded-t-[2rem] bg-white shadow-2xl sm:rounded-[2rem]">
+      <div className="relative flex max-h-[96vh] w-full min-w-0 max-w-5xl flex-col overflow-hidden rounded-t-[1.75rem] bg-white shadow-2xl sm:max-h-[94vh] sm:rounded-[2rem]">
 
         {/* HEADER */}
 
-        <div className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-100 bg-white/95 px-5 py-4 backdrop-blur-xl sm:px-7">
+        <div className="sticky top-0 z-20 flex min-w-0 shrink-0 items-center justify-between gap-3 border-b border-slate-100 bg-white/95 px-4 py-3 backdrop-blur-xl sm:px-7 sm:py-4">
 
-          <div>
+          <div className="min-w-0">
 
-            <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-orange-500">
+            <p className="text-[9px] font-extrabold uppercase tracking-[0.15em] text-orange-500 sm:text-[10px] sm:tracking-[0.18em]">
               Détails du produit
             </p>
 
-            <h3 className="mt-1 text-lg font-black text-blue-950 sm:text-xl">
+            <h3 className="mt-1 truncate text-base font-black text-blue-950 sm:text-xl">
               {nom}
             </h3>
 
@@ -1662,205 +1703,204 @@ function ProductDetailsModal({
             type="button"
             onClick={onClose}
             aria-label="Fermer"
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-xl font-bold text-slate-600 transition hover:bg-slate-200"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xl font-bold text-slate-600 transition hover:bg-slate-200"
           >
             ×
           </button>
 
         </div>
 
-        {/* CONTENU */}
+        {/* CONTENU SCROLLABLE */}
 
-        <div className="grid lg:grid-cols-2">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
 
-          {/* IMAGE */}
+          <div className="grid min-w-0 lg:grid-cols-2">
 
-          <div className="bg-slate-50 p-5 sm:p-8">
+            {/* IMAGE */}
 
-            <div className="relative flex min-h-[300px] items-center justify-center overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white sm:min-h-[440px]">
+            <div className="min-w-0 bg-slate-50 p-4 sm:p-8">
 
-              {image ? (
-                /*
-                 * IMPORTANT :
-                 * On utilise <img> ici et non <Image>.
-                 * L'image vient du Storage Supabase et n'a
-                 * donc pas besoin d'être déclarée dans
-                 * next.config.js.
-                 */
-                <img
-                  src={image}
-                  alt={nom}
-                  className="absolute inset-0 h-full w-full object-contain p-8"
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center text-center">
+              <div className="relative flex min-h-[250px] items-center justify-center overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white sm:min-h-[400px] lg:min-h-[440px]">
 
-                  <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-blue-50 text-5xl">
-                    ☀️
+                {image ? (
+                  <img
+                    src={image}
+                    alt={nom}
+                    className="absolute inset-0 h-full w-full object-contain p-5 sm:p-8"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-center">
+
+                    <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-blue-50 text-4xl sm:h-24 sm:w-24 sm:text-5xl">
+                      ☀️
+                    </div>
+
+                    <p className="mt-5 text-sm font-semibold text-slate-400">
+                      Solution solaire
+                    </p>
+
+                  </div>
+                )}
+
+                <div className="absolute left-3 top-3 max-w-[calc(100%-1.5rem)] sm:left-4 sm:top-4">
+
+                  <span className="inline-block max-w-full truncate rounded-full bg-blue-950 px-3 py-2 text-[10px] font-bold text-white shadow-lg sm:px-4">
+                    {categorie}
+                  </span>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* INFORMATIONS */}
+
+            <div className="min-w-0 p-5 sm:p-8 lg:p-10">
+
+              <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-orange-500">
+                {categorie}
+              </p>
+
+              <h2 className="mt-2 break-words text-2xl font-black tracking-tight text-blue-950 sm:text-4xl">
+                {nom}
+              </h2>
+
+              {prix && (
+                <p className="mt-4 text-xl font-black text-orange-500 sm:text-2xl">
+                  {prix}
+                </p>
+              )}
+
+              {/* DESCRIPTION */}
+
+              <div className="mt-6 rounded-2xl bg-slate-50 p-4 sm:p-5">
+
+                <p className="text-sm font-bold text-blue-950">
+                  Description
+                </p>
+
+                <p className="mt-2 break-words text-sm leading-7 text-slate-600">
+                  {description}
+                </p>
+
+              </div>
+
+              {/* CARACTÉRISTIQUES */}
+
+              {caracteristiques.length > 0 && (
+                <div className="mt-7">
+
+                  <h4 className="text-lg font-black text-blue-950">
+                    Caractéristiques
+                  </h4>
+
+                  <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2">
+
+                    {caracteristiques.map(
+                      (item, index) => (
+                        <div
+                          key={`${item.label}-${index}`}
+                          className="min-w-0 rounded-xl border border-slate-200 bg-white p-4"
+                        >
+
+                          <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                            {item.label}
+                          </p>
+
+                          <p className="mt-1 break-words text-sm font-bold text-blue-950">
+                            {item.value}
+                          </p>
+
+                        </div>
+                      )
+                    )}
+
                   </div>
 
-                  <p className="mt-5 text-sm font-semibold text-slate-400">
-                    Solution solaire
-                  </p>
-
                 </div>
               )}
 
-              <div className="absolute left-4 top-4">
-                <span className="rounded-full bg-blue-950 px-4 py-2 text-xs font-bold text-white shadow-lg">
-                  {categorie}
-                </span>
-              </div>
+              {/* COMPOSANTS */}
 
-            </div>
+              <div className="mt-8">
 
-          </div>
+                <div className="flex min-w-0 items-center justify-between gap-3">
 
-          {/* INFORMATIONS */}
+                  <h4 className="min-w-0 text-lg font-black text-blue-950">
+                    Contenu du kit
+                  </h4>
 
-          <div className="p-6 sm:p-8 lg:p-10">
-
-            <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-orange-500">
-              {categorie}
-            </p>
-
-            <h2 className="mt-2 text-3xl font-black tracking-tight text-blue-950 sm:text-4xl">
-              {nom}
-            </h2>
-
-            {prix && (
-              <p className="mt-4 text-2xl font-black text-orange-500">
-                {prix}
-              </p>
-            )}
-
-            {/* DESCRIPTION */}
-
-            <div className="mt-6 rounded-2xl bg-slate-50 p-5">
-
-              <p className="text-sm font-bold text-blue-950">
-                Description
-              </p>
-
-              <p className="mt-2 text-sm leading-7 text-slate-600">
-                {description}
-              </p>
-
-            </div>
-
-            {/* CARACTÉRISTIQUES */}
-
-            {caracteristiques.length > 0 && (
-              <div className="mt-7">
-
-                <h4 className="text-lg font-black text-blue-950">
-                  Caractéristiques
-                </h4>
-
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-
-                  {caracteristiques.map(
-                    (item, index) => (
-                      <div
-                        key={`${item.label}-${index}`}
-                        className="rounded-xl border border-slate-200 bg-white p-4"
-                      >
-
-                        <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                          {item.label}
-                        </p>
-
-                        <p className="mt-1 text-sm font-bold text-blue-950">
-                          {item.value}
-                        </p>
-
-                      </div>
-                    )
-                  )}
+                  <span className="shrink-0 rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-600">
+                    {composants.length}{" "}
+                    {composants.length > 1
+                      ? "éléments"
+                      : "élément"}
+                  </span>
 
                 </div>
 
+                {composants.length > 0 ? (
+                  <div className="mt-4 space-y-3">
+
+                    {composants.map(
+                      (composant, index) => (
+                        <div
+                          key={`${composant}-${index}`}
+                          className="flex min-w-0 items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                        >
+
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-100 text-sm font-black text-green-600">
+                            ✓
+                          </span>
+
+                          <p className="min-w-0 break-words text-sm font-semibold leading-6 text-slate-700">
+                            {composant}
+                          </p>
+
+                        </div>
+                      )
+                    )}
+
+                  </div>
+                ) : (
+                  <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5">
+
+                    <p className="text-sm leading-6 text-slate-500">
+                      Les composants détaillés de ce kit seront
+                      communiqués lors de l'étude de votre besoin.
+                    </p>
+
+                  </div>
+                )}
+
               </div>
-            )}
 
-            {/* COMPOSANTS */}
+              {/* ACTIONS */}
 
-            <div className="mt-8">
+              <div className="mt-8 flex flex-col gap-3 pb-2 sm:flex-row">
 
-              <div className="flex items-center justify-between gap-3">
+                <a
+                  href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(
+                    `Bonjour Solart Smart, je souhaite avoir plus d'informations sur le produit "${nom}".`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-full bg-green-500 px-6 py-4 text-sm font-extrabold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-green-600"
+                >
+                  WhatsApp
+                  <span>→</span>
+                </a>
 
-                <h4 className="text-lg font-black text-blue-950">
-                  Contenu du kit
-                </h4>
-
-                <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-600">
-                  {composants.length}{" "}
-                  {composants.length > 1
-                    ? "éléments"
-                    : "élément"}
-                </span>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="min-h-[52px] rounded-full border-2 border-slate-200 px-6 py-4 text-sm font-bold text-slate-700 transition hover:border-blue-800 hover:text-blue-800"
+                >
+                  Fermer
+                </button>
 
               </div>
-
-              {composants.length > 0 ? (
-                <div className="mt-4 space-y-3">
-
-                  {composants.map(
-                    (composant, index) => (
-                      <div
-                        key={`${composant}-${index}`}
-                        className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
-                      >
-
-                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-100 text-sm font-black text-green-600">
-                          ✓
-                        </span>
-
-                        <p className="text-sm font-semibold leading-6 text-slate-700">
-                          {composant}
-                        </p>
-
-                      </div>
-                    )
-                  )}
-
-                </div>
-              ) : (
-                <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5">
-
-                  <p className="text-sm leading-6 text-slate-500">
-                    Les composants détaillés de ce kit seront
-                    communiqués lors de l'étude de votre besoin.
-                  </p>
-
-                </div>
-              )}
-
-            </div>
-
-            {/* ACTIONS */}
-
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-
-              <a
-                href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(
-                  `Bonjour Solart Smart, je souhaite avoir plus d'informations sur le produit "${nom}".`
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex flex-1 items-center justify-center gap-2 rounded-full bg-green-500 px-6 py-4 text-sm font-extrabold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-green-600"
-              >
-                WhatsApp
-                <span>→</span>
-              </a>
-
-              <button
-                type="button"
-                onClick={onClose}
-                className="rounded-full border-2 border-slate-200 px-6 py-4 text-sm font-bold text-slate-700 transition hover:border-blue-800 hover:text-blue-800"
-              >
-                Fermer
-              </button>
 
             </div>
 
@@ -1869,6 +1909,7 @@ function ProductDetailsModal({
         </div>
 
       </div>
+
     </div>
   );
 }
