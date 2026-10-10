@@ -1,4060 +1,1996 @@
+
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
+import { supabase } from "@/lib/supabaseClient";
+import CartIcon from "@/components/CartIcon";
 
-const WHATSAPP =
-  "https://wa.me/221785932525";
+const WHATSAPP = "221787110707";
+const EMAIL = "solartsmart.sn@gmail.com";
 
-const VILLES = [
-  {
-    nom: "Dakar",
-    lat: 14.7167,
-    lon: -17.4677,
-  },
-  {
-    nom: "Thiès",
-    lat: 14.7886,
-    lon: -16.926,
-  },
-  {
-    nom: "Touba",
-    lat: 14.85,
-    lon: -15.8833,
-  },
-  {
-    nom: "Diourbel",
-    lat: 14.65,
-    lon: -16.2333,
-  },
-  {
-    nom: "Saint-Louis",
-    lat: 16.0326,
-    lon: -16.4818,
-  },
-  {
-    nom: "Louga",
-    lat: 15.6144,
-    lon: -16.2244,
-  },
-  {
-    nom: "Kaolack",
-    lat: 14.1515,
-    lon: -16.0726,
-  },
-  {
-    nom: "Fatick",
-    lat: 14.339,
-    lon: -16.416,
-  },
-  {
-    nom: "Tambacounda",
-    lat: 13.7707,
-    lon: -13.6673,
-  },
-  {
-    nom: "Kolda",
-    lat: 12.8939,
-    lon: -14.941,
-  },
-  {
-    nom: "Ziguinchor",
-    lat: 12.5833,
-    lon: -16.2719,
-  },
-  {
-    nom: "Matam",
-    lat: 15.6559,
-    lon: -13.2554,
-  },
-  {
-    nom: "Kédougou",
-    lat: 12.5605,
-    lon: -12.1747,
-  },
+const HEURES_SOLAIRES = 5;
+const MARGE_PERTES = 1.3;
+const PUISSANCE_PANNEAU = 550;
+const RENDEMENT_BATTERIE = 0.8;
+
+const APPAREILS_INITIAUX = [
+  { id: "lampe", nom: "Lampe LED", puissance: 10, quantite: 0, jour: 5, nuit: 3, categorie: "Éclairage" },
+  { id: "television", nom: "Télévision LED", puissance: 100, quantite: 0, jour: 5, nuit: 2, categorie: "Multimédia" },
+  { id: "refrigerateur", nom: "Réfrigérateur", puissance: 180, quantite: 0, jour: 8, nuit: 8, categorie: "Électroménager" },
+  { id: "ventilateur", nom: "Ventilateur", puissance: 60, quantite: 0, jour: 6, nuit: 4, categorie: "Confort" },
+  { id: "wifi", nom: "Box Internet / Wi-Fi", puissance: 12, quantite: 0, jour: 10, nuit: 14, categorie: "Multimédia" },
+  { id: "ordinateur", nom: "Ordinateur portable", puissance: 100, quantite: 0, jour: 6, nuit: 1, categorie: "Multimédia" },
+  { id: "clim1", nom: "Climatiseur 1 CV", puissance: 850, quantite: 0, jour: 3, nuit: 4, categorie: "Climatisation" },
+  { id: "clim15", nom: "Climatiseur 1,5 CV", puissance: 1250, quantite: 0, jour: 3, nuit: 4, categorie: "Climatisation" },
+  { id: "clim2", nom: "Climatiseur 2 CV", puissance: 1600, quantite: 0, jour: 3, nuit: 4, categorie: "Climatisation" },
+  { id: "lave-linge", nom: "Lave-linge", puissance: 2000, quantite: 0, jour: 1, nuit: 0, categorie: "Électroménager" },
+  { id: "fer", nom: "Fer à repasser", puissance: 1200, quantite: 0, jour: 0.5, nuit: 0, categorie: "Électroménager" },
+  { id: "microondes", nom: "Four micro-ondes", puissance: 1400, quantite: 0, jour: 0.25, nuit: 0.05, categorie: "Cuisine" },
+  { id: "pompe", nom: "Petite pompe à eau", puissance: 750, quantite: 0, jour: 2, nuit: 0, categorie: "Pompage" },
+  { id: "ordinateur-bureau", nom: "Ordinateur de bureau", puissance: 250, quantite: 0, jour: 7, nuit: 0, categorie: "Multimédia" },
 ];
 
-const TARIFS = {
-  dpp: {
-    nom: "DPP — Domestique Petite Puissance",
-    secteur: "residentiel",
-    tranches: [
-      {
-        limite: 150,
-        prix: 82,
-      },
-      {
-        limite: 250,
-        prix: 136.49,
-      },
-      {
-        limite: Infinity,
-        prix: 159.36,
-      },
-    ],
-  },
-
-  dmp: {
-    nom: "DMP — Domestique Moyenne Puissance",
-    secteur: "residentiel",
-    tranches: [
-      {
-        limite: 50,
-        prix: 111.23,
-      },
-      {
-        limite: 300,
-        prix: 143.54,
-      },
-      {
-        limite: Infinity,
-        prix: 158.46,
-      },
-    ],
-  },
-
-  ppp: {
-    nom: "PPP — Professionnel Petite Puissance",
-    secteur: "commercial",
-    tranches: [
-      {
-        limite: 50,
-        prix: 147.43,
-      },
-      {
-        limite: 500,
-        prix: 189.84,
-      },
-      {
-        limite: Infinity,
-        prix: 208.63,
-      },
-    ],
-  },
-
-  pmp: {
-    nom: "PMP — Professionnel Moyenne Puissance",
-    secteur: "commercial",
-    tranches: [
-      {
-        limite: 100,
-        prix: 165.01,
-      },
-      {
-        limite: 500,
-        prix: 191.01,
-      },
-      {
-        limite: Infinity,
-        prix: 210.81,
-      },
-    ],
-  },
-
-  dgp: {
-    nom: "DGP — Domestique Grande Puissance",
-    secteur: "industriel",
-    pointe: 170.53,
-    horsPointe: 118.37,
-    primeFixe: 956.13,
-  },
-
-  pgp: {
-    nom: "PGP — Professionnel Grande Puissance",
-    secteur: "industriel",
-    pointe: 232.23,
-    horsPointe: 140.74,
-    primeFixe: 2868.39,
-  },
-
-  tg: {
-    nom: "TG — Moyenne Tension Tarif Général",
-    secteur: "industriel",
-    pointe: 184.65,
-    horsPointe: 111.91,
-    primeFixe: 4093.6,
-  },
-};
-
-const SECTEURS = {
-  residentiel: {
-    nom: "Résidentiel",
-    icon: "🏠",
-    description:
-      "Maison, appartement, villa",
-    tarifs: ["dpp", "dmp"],
-
-    appareils: [
-      {
-        id: "frigo",
-        nom: "Réfrigérateur",
-        icon: "🧊",
-        puissance: 150,
-        heures: 8,
-        jours: 7,
-        periode: "mixte",
-      },
-      {
-        id: "congelateur",
-        nom: "Congélateur",
-        icon: "❄️",
-        puissance: 200,
-        heures: 8,
-        jours: 7,
-        periode: "mixte",
-      },
-      {
-        id: "clim9000",
-        nom: "Climatiseur 9 000 BTU",
-        icon: "❄️",
-        puissance: 700,
-        heures: 8,
-        jours: 7,
-        periode: "mixte",
-      },
-      {
-        id: "clim12000",
-        nom: "Climatiseur 12 000 BTU",
-        icon: "❄️",
-        puissance: 1000,
-        heures: 8,
-        jours: 7,
-        periode: "mixte",
-      },
-      {
-        id: "clim18000",
-        nom: "Climatiseur 18 000 BTU",
-        icon: "❄️",
-        puissance: 1500,
-        heures: 8,
-        jours: 7,
-        periode: "mixte",
-      },
-      {
-        id: "tv",
-        nom: "Télévision LED",
-        icon: "📺",
-        puissance: 100,
-        heures: 5,
-        jours: 7,
-        periode: "soir",
-      },
-      {
-        id: "ventilateur",
-        nom: "Ventilateur",
-        icon: "🌀",
-        puissance: 60,
-        heures: 8,
-        jours: 7,
-        periode: "mixte",
-      },
-      {
-        id: "eclairage",
-        nom: "Éclairage LED",
-        icon: "💡",
-        puissance: 10,
-        heures: 5,
-        jours: 7,
-        periode: "soir",
-      },
-      {
-        id: "ordinateur",
-        nom: "Ordinateur",
-        icon: "💻",
-        puissance: 100,
-        heures: 6,
-        jours: 5,
-        periode: "jour",
-      },
-      {
-        id: "chauffe_eau",
-        nom: "Chauffe-eau",
-        icon: "🚿",
-        puissance: 1500,
-        heures: 1.5,
-        jours: 7,
-        periode: "mixte",
-      },
-      {
-        id: "machine_laver",
-        nom: "Machine à laver",
-        icon: "🧺",
-        puissance: 500,
-        heures: 1,
-        jours: 4,
-        periode: "jour",
-      },
-      {
-        id: "fer",
-        nom: "Fer à repasser",
-        icon: "👕",
-        puissance: 1800,
-        heures: 0.5,
-        jours: 3,
-        periode: "jour",
-      },
-      {
-        id: "microonde",
-        nom: "Micro-ondes",
-        icon: "🍲",
-        puissance: 1200,
-        heures: 0.5,
-        jours: 7,
-        periode: "mixte",
-      },
-      {
-        id: "pompe",
-        nom: "Pompe à eau",
-        icon: "💧",
-        puissance: 750,
-        heures: 2,
-        jours: 7,
-        periode: "jour",
-      },
-    ],
-  },
-
-  commercial: {
-    nom: "Commercial",
-    icon: "🏢",
-    description:
-      "Boutique, magasin, bureau, restaurant",
-    tarifs: ["ppp", "pmp"],
-
-    appareils: [
-      {
-        id: "clim12000",
-        nom: "Climatiseur 12 000 BTU",
-        icon: "❄️",
-        puissance: 1000,
-        heures: 10,
-        jours: 6,
-        periode: "mixte",
-      },
-      {
-        id: "clim18000",
-        nom: "Climatiseur 18 000 BTU",
-        icon: "❄️",
-        puissance: 1500,
-        heures: 10,
-        jours: 6,
-        periode: "mixte",
-      },
-      {
-        id: "clim24000",
-        nom: "Climatiseur 24 000 BTU",
-        icon: "❄️",
-        puissance: 2200,
-        heures: 10,
-        jours: 6,
-        periode: "mixte",
-      },
-      {
-        id: "vitrine",
-        nom: "Vitrine réfrigérée",
-        icon: "🧊",
-        puissance: 800,
-        heures: 12,
-        jours: 6,
-        periode: "jour",
-      },
-      {
-        id: "congelateur",
-        nom: "Congélateur professionnel",
-        icon: "❄️",
-        puissance: 700,
-        heures: 12,
-        jours: 6,
-        periode: "jour",
-      },
-      {
-        id: "frigo",
-        nom: "Réfrigérateur professionnel",
-        icon: "🧊",
-        puissance: 500,
-        heures: 12,
-        jours: 6,
-        periode: "jour",
-      },
-      {
-        id: "eclairage",
-        nom: "Éclairage commercial",
-        icon: "💡",
-        puissance: 30,
-        heures: 10,
-        jours: 6,
-        periode: "jour",
-      },
-      {
-        id: "ordinateur",
-        nom: "Ordinateur de bureau",
-        icon: "💻",
-        puissance: 150,
-        heures: 8,
-        jours: 6,
-        periode: "jour",
-      },
-      {
-        id: "caisse",
-        nom: "Caisse / POS",
-        icon: "🧾",
-        puissance: 100,
-        heures: 10,
-        jours: 6,
-        periode: "jour",
-      },
-      {
-        id: "serveur",
-        nom: "Serveur / informatique",
-        icon: "🖥️",
-        puissance: 500,
-        heures: 24,
-        jours: 7,
-        periode: "mixte",
-      },
-      {
-        id: "pompe",
-        nom: "Pompe à eau",
-        icon: "💧",
-        puissance: 1500,
-        heures: 3,
-        jours: 6,
-        periode: "jour",
-      },
-      {
-        id: "four",
-        nom: "Four électrique",
-        icon: "🔥",
-        puissance: 3000,
-        heures: 3,
-        jours: 6,
-        periode: "jour",
-      },
-    ],
-  },
-
-  industriel: {
-    nom: "Industriel",
-    icon: "⚙️",
-    description:
-      "Atelier, usine, production, grande installation",
-    tarifs: ["dgp", "pgp", "tg"],
-
-    appareils: [
-      {
-        id: "moteur",
-        nom: "Moteur électrique",
-        icon: "⚙️",
-        puissance: 11000,
-        heures: 8,
-        jours: 6,
-        periode: "jour",
-        moteur: true,
-      },
-      {
-        id: "pompe",
-        nom: "Pompe industrielle",
-        icon: "💧",
-        puissance: 15000,
-        heures: 8,
-        jours: 6,
-        periode: "jour",
-        moteur: true,
-      },
-      {
-        id: "compresseur",
-        nom: "Compresseur",
-        icon: "🔧",
-        puissance: 15000,
-        heures: 8,
-        jours: 6,
-        periode: "jour",
-        moteur: true,
-      },
-      {
-        id: "clim",
-        nom: "Climatisation industrielle",
-        icon: "❄️",
-        puissance: 10000,
-        heures: 10,
-        jours: 6,
-        periode: "jour",
-      },
-      {
-        id: "chambre_froide",
-        nom: "Chambre froide",
-        icon: "🧊",
-        puissance: 8000,
-        heures: 12,
-        jours: 7,
-        periode: "mixte",
-      },
-      {
-        id: "eclairage",
-        nom: "Éclairage industriel",
-        icon: "💡",
-        puissance: 100,
-        heures: 10,
-        jours: 6,
-        periode: "jour",
-      },
-      {
-        id: "machine",
-        nom: "Machine de production",
-        icon: "🏭",
-        puissance: 22000,
-        heures: 8,
-        jours: 6,
-        periode: "jour",
-      },
-      {
-        id: "ventilation",
-        nom: "Ventilation industrielle",
-        icon: "🌀",
-        puissance: 5000,
-        heures: 10,
-        jours: 6,
-        periode: "jour",
-      },
-      {
-        id: "soudeuse",
-        nom: "Poste à souder",
-        icon: "⚡",
-        puissance: 6000,
-        heures: 4,
-        jours: 6,
-        periode: "jour",
-      },
-    ],
-  },
-};
-
-const PANNEAUX = [
-  450,
-  550,
-  580,
-  610,
-  620,
-  700,
-];
-
-const MOIS = [
-  "Jan",
-  "Fév",
-  "Mar",
-  "Avr",
-  "Mai",
-  "Juin",
-  "Juil",
-  "Août",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Déc",
-];
-
-function formatNombre(value, decimals = 1) {
-  return Number(value || 0).toLocaleString(
-    "fr-FR",
-    {
-      maximumFractionDigits: decimals,
-    }
-  );
-}
-
-function formatFCFA(value) {
-  return (
-    Math.round(Number(value || 0)).toLocaleString(
-      "fr-FR"
-    ) + " FCFA"
-  );
-}
-
-/*
- * ---------------------------------------------------------
- * FACTURE SENELEC
- * ---------------------------------------------------------
- */
-
-function calculerFacture(
-  kWh,
-  tarifId,
-  puissanceSouscrite = 0
-) {
-  const tarif = TARIFS[tarifId];
-
-  if (!tarif || kWh <= 0) {
-    return 0;
-  }
-
-  if (tarif.tranches) {
-    let reste = kWh;
-    let precedent = 0;
-    let total = 0;
-
-    for (const tranche of tarif.tranches) {
-      const limite = tranche.limite;
-
-      const volume =
-        limite === Infinity
-          ? reste
-          : Math.max(
-              0,
-              Math.min(
-                reste,
-                limite - precedent
-              )
-            );
-
-      total +=
-        volume * tranche.prix;
-
-      reste -= volume;
-
-      if (limite !== Infinity) {
-        precedent = limite;
-      }
-
-      if (reste <= 0) {
-        break;
-      }
-    }
-
-    return total;
-  }
-
-  const puissance =
-    Number(puissanceSouscrite) || 0;
-
-  const pointe = kWh * 0.3;
-
-  const horsPointe =
-    kWh - pointe;
-
-  return (
-    horsPointe * tarif.horsPointe +
-    pointe * tarif.pointe +
-    puissance * tarif.primeFixe
-  );
-}
-
-/*
- * ---------------------------------------------------------
- * PROFILS HORAIRES
- * ---------------------------------------------------------
- */
-
-function heuresDansFenetre(
-  heure,
-  debut,
-  fin
-) {
-  if (debut < fin) {
-    return heure >= debut && heure < fin;
-  }
-
-  return (
-    heure >= debut ||
-    heure < fin
-  );
-}
-
-function creerProfilFacture(
-  energieJour,
-  partJour
-) {
-  const profil = Array(24).fill(0);
-
-  const jour = Math.max(
-    0,
-    Math.min(
-      1,
-      partJour / 100
-    )
-  );
-
-  const nuit = 1 - jour;
-
-  const heuresJour = [];
-
-  const heuresNuit = [];
-
-  for (let h = 0; h < 24; h++) {
-    if (
-      heuresDansFenetre(
-        h,
-        8,
-        18
-      )
-    ) {
-      heuresJour.push(h);
-    } else {
-      heuresNuit.push(h);
-    }
-  }
-
-  const energieJourHoraire =
-    energieJour * jour;
-
-  const energieNuitHoraire =
-    energieJour * nuit;
-
-  heuresJour.forEach((h) => {
-    profil[h] =
-      energieJourHoraire /
-      heuresJour.length;
+const fmt = (nombre) =>
+  Number(nombre || 0).toLocaleString("fr-FR", {
+    maximumFractionDigits: 2,
   });
 
-  heuresNuit.forEach((h) => {
-    profil[h] =
-      energieNuitHoraire /
-      heuresNuit.length;
-  });
+const FCFA = (nombre) => `${fmt(nombre)} FCFA`;
 
-  return profil;
+function nombreValide(valeur) {
+  const n = Number(valeur);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
 }
 
-function creerProfilAppareils(
-  appareilsActifs,
-  appareils
-) {
-  const profil = Array(24).fill(0);
-
-  appareilsActifs.forEach(
-    (appareil) => {
-      const data =
-        appareils[appareil.id];
-
-      if (!data) {
-        return;
-      }
-
-      const quantite =
-        Number(data.quantite) || 0;
-
-      const puissance =
-        Number(data.puissance) || 0;
-
-      const heures =
-        Number(data.heures) || 0;
-
-      const jours =
-        Number(data.jours) || 0;
-
-      const periode =
-        data.periode ||
-        appareil.periode ||
-        "jour";
-
-      if (
-        quantite <= 0 ||
-        puissance <= 0 ||
-        heures <= 0 ||
-        jours <= 0
-      ) {
-        return;
-      }
-
-      const energieJour =
-        (quantite *
-          puissance *
-          heures *
-          (jours / 7)) /
-        1000;
-
-      let fenetre = [];
-
-      if (periode === "jour") {
-        fenetre = Array.from(
-          { length: 10 },
-          (_, i) => i + 8
-        );
-      } else if (
-        periode === "soir"
-      ) {
-        fenetre = [
-          18,
-          19,
-          20,
-          21,
-          22,
-        ];
-      } else {
-        fenetre = [
-          8,
-          9,
-          10,
-          11,
-          12,
-          13,
-          14,
-          15,
-          16,
-          17,
-          18,
-          19,
-          20,
-          21,
-          22,
-          23,
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-        ];
-      }
-
-      /*
-       * On répartit l'énergie de l'appareil
-       * dans sa fenêtre d'utilisation.
-       *
-       * Cela évite de supposer qu'un appareil
-       * consomme toute sa puissance pendant
-       * les 24 heures.
-       */
-
-      const energieParHeure =
-        energieJour /
-        fenetre.length;
-
-      fenetre.forEach((heure) => {
-        profil[heure] +=
-          energieParHeure;
-      });
-    }
+function nomProduit(produit) {
+  return (
+    produit?.nom ||
+    produit?.name ||
+    produit?.titre ||
+    produit?.title ||
+    "Solution solaire"
   );
-
-  return profil;
 }
 
-/*
- * ---------------------------------------------------------
- * SIMULATION PV + BATTERIE + RESEAU
- * ---------------------------------------------------------
- */
+function categorieProduit(produit) {
+  return String(
+    produit?.categorie ||
+      produit?.category ||
+      produit?.type ||
+      ""
+  ).toLowerCase();
+}
 
-function simulerSysteme({
-  pvKw,
-  productionHoraire1kWp,
-  profilCharge,
-  batterieKWh,
+function estPompage(produit) {
+  const categorie = categorieProduit(produit);
+  return categorie.includes("pompage") || categorie.includes("pompe");
+}
+
+function estKit(produit) {
+  const categorie = categorieProduit(produit);
+  return (
+    categorie.includes("kit") ||
+    categorie.includes("maison") ||
+    categorie.includes("entreprise") ||
+    categorie.includes("pompage")
+  );
+}
+
+function prixProduit(produit) {
+  const valeur = produit?.prix ?? produit?.price ?? produit?.montant;
+  if (valeur === null || valeur === undefined || valeur === "") return null;
+
+  const n = Number(valeur);
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
+
+function energieProduit(produit) {
+  const valeur =
+    produit?.kwh_jour ??
+    produit?.consommation_kwh_jour ??
+    produit?.consommation_journaliere ??
+    produit?.capacite_kwh_jour;
+
+  const n = Number(valeur);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function puissancePanneauxProduit(produit) {
+  const valeur =
+    produit?.puissance_panneaux_wc ??
+    produit?.puissance_pv_wc ??
+    produit?.puissance_panneaux ??
+    produit?.puissance_solaire_wc;
+
+  const n = Number(valeur);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function batterieProduit(produit) {
+  const valeur =
+    produit?.batterie_kwh ??
+    produit?.capacite_batterie_kwh ??
+    produit?.stockage_kwh;
+
+  const n = Number(valeur);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function onduleurProduit(produit) {
+  const valeur =
+    produit?.onduleur_kw ??
+    produit?.puissance_onduleur_kw ??
+    produit?.puissance_onduleur;
+
+  const n = Number(valeur);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function SectionTitre({ numero, titre, description }) {
+  return (
+    <div className="mb-6 flex items-start gap-4">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-800 text-lg font-black text-white">
+        {numero}
+      </div>
+      <div className="min-w-0">
+        <h2 className="text-xl font-black text-blue-950 sm:text-2xl">
+          {titre}
+        </h2>
+        <p className="mt-1 text-sm leading-6 text-slate-500">
+          {description}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Champ({
+  label,
+  value,
+  onChange,
+  type = "text",
+  placeholder,
+  required = false,
+  min,
+  max,
+  step,
 }) {
-  const CHARGE_EFF =
-    0.95;
-
-  const DECHARGE_EFF =
-    0.95;
-
-  let batterie =
-    Math.max(
-      0,
-      Number(batterieKWh) || 0
-    );
-
-  let energieDirecte = 0;
-  let energieBatterie = 0;
-  let energieReseau = 0;
-  let energiePV = 0;
-  let energiePerdue = 0;
-
-  const heures =
-    Math.min(
-      productionHoraire1kWp.length,
-      8760
-    );
-
-  for (let i = 0; i < heures; i++) {
-    const pv =
-      Math.max(
-        0,
-        Number(
-          productionHoraire1kWp[i]
-        ) || 0
-      ) * pvKw;
-
-    const charge =
-      Math.max(
-        0,
-        Number(
-          profilCharge[
-            i % 24
-          ]
-        ) || 0
-      );
-
-    energiePV += pv;
-
-    const direct =
-      Math.min(
-        pv,
-        charge
-      );
-
-    energieDirecte +=
-      direct;
-
-    const surplus =
-      Math.max(
-        0,
-        pv - direct
-      );
-
-    if (surplus > 0) {
-      const espace =
-        Math.max(
-          0,
-          batterieKWh -
-            batterie
-        );
-
-      const stockage =
-        Math.min(
-          espace,
-          surplus *
-            CHARGE_EFF
-        );
-
-      batterie += stockage;
-
-      const surplusNonStocke =
-        Math.max(
-          0,
-          surplus -
-            stockage /
-              CHARGE_EFF
-        );
-
-      energiePerdue +=
-        surplusNonStocke;
-    }
-
-    const manque =
-      Math.max(
-        0,
-        charge - direct
-      );
-
-    if (manque > 0) {
-      const disponible =
-        batterie *
-        DECHARGE_EFF;
-
-      const depuisBatterie =
-        Math.min(
-          manque,
-          disponible
-        );
-
-      batterie -=
-        depuisBatterie /
-        DECHARGE_EFF;
-
-      energieBatterie +=
-        depuisBatterie;
-
-      energieReseau +=
-        Math.max(
-          0,
-          manque -
-            depuisBatterie
-        );
-    }
-  }
-
-  const energieCharge =
-    profilCharge.reduce(
-      (a, b) => a + b,
-      0
-    ) *
-    (heures / 24);
-
-  const autoconsommation =
-    energieDirecte +
-    energieBatterie;
-
-  const tauxAutoconsommation =
-    energiePV > 0
-      ? Math.min(
-          100,
-          (autoconsommation /
-            energiePV) *
-            100
-        )
-      : 0;
-
-  const couvertureCharge =
-    energieCharge > 0
-      ? Math.min(
-          100,
-          (autoconsommation /
-            energieCharge) *
-            100
-        )
-      : 0;
-
-  return {
-    energiePV,
-    energieDirecte,
-    energieBatterie,
-    energieReseau,
-    energiePerdue,
-    energieCharge,
-    tauxAutoconsommation,
-    couvertureCharge,
-  };
-}
-
-/*
- * ---------------------------------------------------------
- * ESTIMATION BATTERIE
- * ---------------------------------------------------------
- */
-
-function calculerBatterie(
-  profil,
-  facteur
-) {
-  let energieSoirNuit = 0;
-
-  for (let h = 18; h < 24; h++) {
-    energieSoirNuit +=
-      Number(profil[h]) || 0;
-  }
-
-  for (let h = 0; h < 8; h++) {
-    energieSoirNuit +=
-      Number(profil[h]) || 0;
-  }
-
-  /*
-   * Batterie nominale :
-   *
-   * énergie soir/nuit
-   * × facteur scénario
-   *
-   * puis correction :
-   * - DoD 80 %
-   * - rendement batterie 95 %
-   */
-
-  const dod = 0.8;
-
-  const rendement =
-    0.95;
-
-  const nominale =
-    (energieSoirNuit *
-      facteur) /
-    (dod * rendement);
-
-  return Math.max(
-    0,
-    nominale
+  return (
+    <label className="block min-w-0">
+      <span className="mb-2 block text-sm font-bold text-slate-700">
+        {label} {required && <span className="text-orange-500">*</span>}
+      </span>
+      <input
+        type={type}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        required={required}
+        min={min}
+        max={max}
+        step={step}
+        className="min-h-[48px] w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+      />
+    </label>
   );
 }
 
-/*
- * ---------------------------------------------------------
- * COMPOSANT
- * ---------------------------------------------------------
- */
+function ChoixCarte({ actif, onClick, icone, titre, description }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={actif}
+      className={`min-w-0 rounded-2xl border p-4 text-left transition sm:p-5 ${
+        actif
+          ? "border-blue-700 bg-blue-50 ring-2 ring-blue-100"
+          : "border-slate-200 bg-white hover:border-blue-300 hover:bg-slate-50"
+      }`}
+    >
+      <span className="text-2xl">{icone}</span>
+      <span className="mt-3 block font-black text-blue-950">{titre}</span>
+      <span className="mt-1 block text-sm leading-5 text-slate-500">
+        {description}
+      </span>
+      <span
+        className={`mt-4 inline-flex rounded-full px-3 py-1 text-xs font-bold ${
+          actif ? "bg-blue-800 text-white" : "bg-slate-100 text-slate-500"
+        }`}
+      >
+        {actif ? "Sélectionné" : "Choisir"}
+      </span>
+    </button>
+  );
+}
 
-export default function Estimation() {
-  const [secteur, setSecteur] =
-    useState("residentiel");
+function BarreProgression({ etape }) {
+  const etapes = ["Votre profil", "Votre compteur", "Vos appareils", "Vos coordonnées"];
 
-  const [source, setSource] =
-    useState("facture");
+  return (
+    <div className="mb-8">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <span className="text-sm font-black text-blue-950">
+          Étape {etape} sur 4
+        </span>
+        <span className="text-xs font-bold text-slate-400">
+          {Math.round((etape / 4) * 100)} % complété
+        </span>
+      </div>
 
-  const [fichierFacture, setFichierFacture] =
-    useState(null);
+      <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-blue-800 to-orange-500 transition-all duration-300"
+          style={{ width: `${(etape / 4) * 100}%` }}
+        />
+      </div>
 
-  const [kwhFacture, setKwhFacture] =
-    useState("");
+      <div className="mt-4 grid grid-cols-4 gap-2">
+        {etapes.map((nom, index) => (
+          <div key={nom} className="min-w-0">
+            <div
+              className={`mb-2 h-1 rounded-full ${
+                etape >= index + 1 ? "bg-orange-500" : "bg-slate-200"
+              }`}
+            />
+            <p
+              className={`break-words text-[10px] font-bold sm:text-xs ${
+                etape === index + 1 ? "text-blue-900" : "text-slate-400"
+              }`}
+            >
+              {nom}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
-  const [montantFacture, setMontantFacture] =
-    useState("");
+export default function EstimationPage() {
+  const [etape, setEtape] = useState(1);
+  const [profil, setProfil] = useState("residentiel");
+  const [compteur, setCompteur] = useState("woyofal");
+  const [typeAbonnement, setTypeAbonnement] = useState("inconnu");
 
-  const [
-    puissanceSouscrite,
-    setPuissanceSouscrite,
-  ] = useState("");
+  const [montantWoyofal, setMontantWoyofal] = useState("");
+  const [kwhWoyofal, setKwhWoyofal] = useState("");
 
-  const [tarifId, setTarifId] =
-    useState("dpp");
+  const [tranches, setTranches] = useState([
+    { montant: "", kwh: "" },
+    { montant: "", kwh: "" },
+    { montant: "", kwh: "" },
+  ]);
 
-  const [appareils, setAppareils] =
-    useState({});
+  const [appareils, setAppareils] = useState(APPAREILS_INITIAUX);
 
-  const [appareilActif, setAppareilActif] =
-    useState(null);
+  const [appareilPersonnalise, setAppareilPersonnalise] = useState({
+    nom: "",
+    puissance: "500",
+    quantite: "1",
+    jour: "4",
+    nuit: "0",
+  });
 
-  const [ville, setVille] =
-    useState("Dakar");
+  const [appareilsPerso, setAppareilsPerso] = useState([]);
 
-  const [latitude, setLatitude] =
-    useState(14.7167);
+  const [nom, setNom] = useState("");
+  const [telephone, setTelephone] = useState("");
+  const [ville, setVille] = useState("");
+  const [email, setEmail] = useState("");
+  const [precision, setPrecision] = useState("");
 
-  const [longitude, setLongitude] =
-    useState(-17.4677);
+  const [produits, setProduits] = useState([]);
+  const [loadingProduits, setLoadingProduits] = useState(true);
+  const [erreurProduits, setErreurProduits] = useState("");
 
-  const [
-    localisationMessage,
-    setLocalisationMessage,
-  ] = useState("");
-
-  const [angle, setAngle] =
-    useState("15");
-
-  const [aspect, setAspect] =
-    useState("0");
-
-  const [pertes, setPertes] =
-    useState("14");
-
-  const [panneauW, setPanneauW] =
-    useState(620);
-
-  const [jourShare, setJourShare] =
-    useState(45);
-
-  const [resultat, setResultat] =
-    useState(null);
-
-  const [chargement, setChargement] =
-    useState(false);
-
-  const [erreur, setErreur] =
-    useState("");
-
-  const appareilsRef =
-    useRef(null);
-
-  const configurationRef =
-    useRef(null);
-
-  const configSecteur =
-    SECTEURS[secteur];
-
-  const appareilsActifs =
-    configSecteur.appareils;
-
-  /*
-   * ---------------------------------------------------------
-   * RESUME APPAREILS
-   * ---------------------------------------------------------
-   */
-
-  const resumeAppareils =
-    useMemo(() => {
-      let nombre = 0;
-      let puissance = 0;
-      let energie = 0;
-
-      appareilsActifs.forEach(
-        (appareil) => {
-          const data =
-            appareils[
-              appareil.id
-            ];
-
-          if (!data) {
-            return;
-          }
-
-          const q =
-            Number(
-              data.quantite
-            ) || 0;
-
-          const w =
-            Number(
-              data.puissance
-            ) || 0;
-
-          const h =
-            Number(
-              data.heures
-            ) || 0;
-
-          const j =
-            Number(
-              data.jours
-            ) || 0;
-
-          if (
-            q <= 0 ||
-            w <= 0 ||
-            h <= 0 ||
-            j <= 0
-          ) {
-            return;
-          }
-
-          nombre++;
-
-          puissance +=
-            q * w;
-
-          energie +=
-            (q *
-              w *
-              h *
-              (j / 7)) /
-            1000;
-        }
-      );
-
-      return {
-        nombre,
-        puissance,
-        energie,
-      };
-    }, [
-      appareils,
-      appareilsActifs,
-    ]);
-
-  /*
-   * ---------------------------------------------------------
-   * SCROLL CONFIGURATION
-   * ---------------------------------------------------------
-   */
+  const [resultatVisible, setResultatVisible] = useState(false);
+  const [erreurFormulaire, setErreurFormulaire] = useState("");
 
   useEffect(() => {
-    if (
-      appareilActif &&
-      configurationRef.current
-    ) {
-      const timer =
-        setTimeout(() => {
-          configurationRef.current.scrollIntoView(
-            {
-              behavior: "smooth",
-              block: "center",
-            }
-          );
-        }, 100);
+    let actif = true;
 
-      return () =>
-        clearTimeout(timer);
-    }
-  }, [appareilActif]);
+    async function chargerProduits() {
+      setLoadingProduits(true);
+      setErreurProduits("");
 
-  /*
-   * ---------------------------------------------------------
-   * SECTEUR
-   * ---------------------------------------------------------
-   */
+      try {
+        const { data, error } = await supabase.from("produits").select("*");
 
-  function changerSecteur(
-    nouveau
-  ) {
-    setSecteur(nouveau);
+        if (error) throw error;
 
-    setTarifId(
-      SECTEURS[
-        nouveau
-      ].tarifs[0]
-    );
-
-    setAppareils({});
-
-    setAppareilActif(null);
-
-    setResultat(null);
-
-    setErreur("");
-  }
-
-  /*
-   * ---------------------------------------------------------
-   * VILLE
-   * ---------------------------------------------------------
-   */
-
-  function choisirVille(nom) {
-    if (
-      nom ===
-      "Position actuelle"
-    ) {
-      utiliserMaPosition();
-      return;
-    }
-
-    const villeTrouvee =
-      VILLES.find(
-        (v) =>
-          v.nom === nom
-      );
-
-    if (!villeTrouvee) {
-      return;
-    }
-
-    setVille(nom);
-
-    setLatitude(
-      villeTrouvee.lat
-    );
-
-    setLongitude(
-      villeTrouvee.lon
-    );
-
-    setLocalisationMessage(
-      ""
-    );
-  }
-
-  /*
-   * ---------------------------------------------------------
-   * GPS
-   * ---------------------------------------------------------
-   */
-
-  function utiliserMaPosition() {
-    setLocalisationMessage(
-      ""
-    );
-
-    if (
-      typeof navigator ===
-        "undefined" ||
-      !navigator.geolocation
-    ) {
-      setLocalisationMessage(
-        "La géolocalisation n'est pas disponible."
-      );
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const lat =
-          position.coords
-            .latitude;
-
-        const lon =
-          position.coords
-            .longitude;
-
-        setLatitude(lat);
-
-        setLongitude(lon);
-
-        setVille(
-          "Position actuelle"
-        );
-
-        setLocalisationMessage(
-          "✓ Position récupérée. Ces coordonnées seront utilisées par PVGIS."
-        );
-      },
-      () => {
-        setLocalisationMessage(
-          "Impossible de récupérer votre position. Vérifiez l'autorisation de localisation du navigateur."
-        );
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000,
-      }
-    );
-  }
-
-  /*
-   * ---------------------------------------------------------
-   * APPAREILS
-   * ---------------------------------------------------------
-   */
-
-  function ouvrirAppareil(
-    appareil
-  ) {
-    setErreur("");
-
-    setAppareils(
-      (ancien) => {
-        const actuel =
-          ancien[
-            appareil.id
-          ] || {};
-
-        return {
-          ...ancien,
-
-          [appareil.id]: {
-            quantite:
-              actuel.quantite ??
-              0,
-
-            puissance:
-              actuel.puissance ??
-              appareil.puissance ??
-              0,
-
-            heures:
-              actuel.heures ??
-              appareil.heures ??
-              0,
-
-            jours:
-              actuel.jours ??
-              appareil.jours ??
-              1,
-
-            periode:
-              actuel.periode ??
-              appareil.periode ??
-              "jour",
-          },
-        };
-      }
-    );
-
-    setAppareilActif(
-      appareil.id
-    );
-  }
-
-  function modifierAppareil(
-    id,
-    champ,
-    valeur
-  ) {
-    setAppareils(
-      (ancien) => {
-        const appareil =
-          appareilsActifs.find(
-            (item) =>
-              item.id === id
-          );
-
-        const actuel =
-          ancien[id] || {};
-
-        return {
-          ...ancien,
-
-          [id]: {
-            quantite:
-              actuel.quantite ??
-              0,
-
-            puissance:
-              actuel.puissance ??
-              appareil?.puissance ??
-              0,
-
-            heures:
-              actuel.heures ??
-              appareil?.heures ??
-              0,
-
-            jours:
-              actuel.jours ??
-              appareil?.jours ??
-              1,
-
-            periode:
-              actuel.periode ??
-              appareil?.periode ??
-              "jour",
-
-            [champ]: valeur,
-          },
-        };
-      }
-    );
-  }
-
-  function valeurAppareil(
-    appareil,
-    champ
-  ) {
-    const valeur =
-      appareils[
-        appareil.id
-      ]?.[champ];
-
-    if (
-      valeur !== undefined &&
-      valeur !== null
-    ) {
-      return String(
-        valeur
-      );
-    }
-
-    if (
-      appareil[champ] !==
-        undefined &&
-      appareil[champ] !== null
-    ) {
-      return String(
-        appareil[champ]
-      );
-    }
-
-    if (
-      champ === "periode"
-    ) {
-      return "jour";
-    }
-
-    return "";
-  }
-
-  function appareilAjoute(
-    appareil
-  ) {
-    return (
-      Number(
-        appareils[
-          appareil.id
-        ]?.quantite
-      ) > 0
-    );
-  }
-
-  function ajouterAppareil(
-    appareil
-  ) {
-    const data =
-      appareils[
-        appareil.id
-      ] || {};
-
-    const q =
-      Number(
-        data.quantite
-      ) || 0;
-
-    const w =
-      Number(
-        data.puissance
-      ) || 0;
-
-    const h =
-      Number(
-        data.heures
-      ) || 0;
-
-    const j =
-      Number(
-        data.jours
-      ) || 0;
-
-    if (q <= 0) {
-      setErreur(
-        `Indiquez la quantité pour ${appareil.nom}.`
-      );
-      return;
-    }
-
-    if (w <= 0) {
-      setErreur(
-        `Indiquez la puissance réelle de ${appareil.nom}.`
-      );
-      return;
-    }
-
-    if (h <= 0 || h > 24) {
-      setErreur(
-        `Les heures d'utilisation de ${appareil.nom} doivent être comprises entre 0 et 24.`
-      );
-      return;
-    }
-
-    if (j <= 0 || j > 7) {
-      setErreur(
-        `Les jours d'utilisation de ${appareil.nom} doivent être compris entre 1 et 7.`
-      );
-      return;
-    }
-
-    setErreur("");
-
-    setAppareils(
-      (ancien) => ({
-        ...ancien,
-
-        [appareil.id]: {
-          ...ancien[
-            appareil.id
-          ],
-
-          quantite: q,
-
-          puissance: w,
-
-          heures: h,
-
-          jours: j,
-
-          periode:
-            data.periode ||
-            appareil.periode ||
-            "jour",
-        },
-      })
-    );
-
-    setAppareilActif(
-      null
-    );
-
-    setTimeout(() => {
-      appareilsRef.current?.scrollIntoView(
-        {
-          behavior: "smooth",
-          block: "start",
+        if (actif) {
+          setProduits(Array.isArray(data) ? data : []);
         }
+      } catch (error) {
+        console.error("Chargement du catalogue :", error);
+
+        if (actif) {
+          setErreurProduits(
+            "Le catalogue n'est pas accessible pour le moment. Vous pouvez tout de même calculer vos besoins."
+          );
+        }
+      } finally {
+        if (actif) setLoadingProduits(false);
+      }
+    }
+
+    chargerProduits();
+
+    return () => {
+      actif = false;
+    };
+  }, []);
+
+  const appareilsTous = useMemo(
+    () => [...appareils, ...appareilsPerso],
+    [appareils, appareilsPerso]
+  );
+
+  // Calcul énergétique à partir des appareils.
+  const calcul = useMemo(() => {
+    let jourWh = 0;
+    let nuitWh = 0;
+    let puissanceTotale = 0;
+    let nombreAppareils = 0;
+
+    appareilsTous.forEach((appareil) => {
+      const q = nombreValide(appareil.quantite);
+      const w = nombreValide(appareil.puissance);
+      const hJour = Math.min(24, nombreValide(appareil.jour));
+      const hNuit = Math.min(24, nombreValide(appareil.nuit));
+
+      if (q > 0 && w > 0) {
+        nombreAppareils += q;
+        jourWh += q * w * hJour;
+        nuitWh += q * w * hNuit;
+        puissanceTotale += q * w;
+      }
+    });
+
+    const kwhJour = (jourWh + nuitWh) / 1000;
+
+    return {
+      jourWh,
+      nuitWh,
+      kwhJour,
+      kwhMois: kwhJour * 30,
+      nombreAppareils,
+      puissanceTotale,
+      energieNuitKwh: nuitWh / 1000,
+    };
+  }, [appareilsTous]);
+
+  // Consommation de référence issue du compteur.
+  // Le montant en FCFA seul ne permet pas de calculer précisément les kWh.
+  const consommationDeclaree = useMemo(() => {
+    if (compteur === "woyofal") {
+      return nombreValide(kwhWoyofal);
+    }
+
+    if (compteur === "senelec") {
+      return tranches.reduce(
+        (total, tranche) => total + nombreValide(tranche.kwh),
+        0
       );
+    }
+
+    return 0;
+  }, [compteur, kwhWoyofal, tranches]);
+
+  const montantDeclare = useMemo(() => {
+    if (compteur === "woyofal") {
+      return nombreValide(montantWoyofal);
+    }
+
+    if (compteur === "senelec") {
+      return tranches.reduce(
+        (total, tranche) => total + nombreValide(tranche.montant),
+        0
+      );
+    }
+
+    return 0;
+  }, [compteur, montantWoyofal, tranches]);
+
+  // Si la consommation du compteur est connue, on l'utilise comme référence.
+  // On ne l'ajoute jamais une deuxième fois à la consommation des appareils.
+  const kwhJourFinal =
+    consommationDeclaree > 0
+      ? consommationDeclaree / 30
+      : calcul.kwhJour;
+
+  const kwhMoisFinal = kwhJourFinal * 30;
+
+  const kwcFinal =
+    kwhJourFinal > 0
+      ? (kwhJourFinal * MARGE_PERTES) / HEURES_SOLAIRES
+      : 0;
+
+  const panneauxFinal =
+    kwcFinal > 0
+      ? Math.ceil((kwcFinal * 1000) / PUISSANCE_PANNEAU)
+      : 0;
+
+  // Le besoin de nuit est estimé à partir des appareils renseignés.
+  // Si aucun horaire nocturne n'est indiqué, on utilise une hypothèse
+  // de 50 % de la consommation quotidienne pour un premier calcul.
+  const energieNuitEstimee =
+    calcul.energieNuitKwh > 0
+      ? calcul.energieNuitKwh
+      : kwhJourFinal * 0.5;
+
+  const batterieFinale =
+    energieNuitEstimee > 0
+      ? energieNuitEstimee / RENDEMENT_BATTERIE
+      : 0;
+
+  const puissanceOnduleurFinale =
+    calcul.puissanceTotale > 0
+      ? (calcul.puissanceTotale * 1.25) / 1000
+      : 0;
+
+  // Recommandation des produits : profil compatible, capacité journalière
+  // renseignée et suffisante, et vérification des caractéristiques techniques
+  // lorsque ces informations existent dans la base.
+  const evaluationProduits = useMemo(() => {
+    if (kwhJourFinal <= 0) {
+      return { recommandes: [], insuffisants: [], nonVerifiables: [] };
+    }
+
+    const kits = produits.filter(estKit);
+
+    const profilCompatible = kits.filter((produit) => {
+      const categorie = categorieProduit(produit);
+
+      if (profil === "pompage") {
+        return estPompage(produit);
+      }
+
+      if (profil === "entreprise") {
+        return (
+          !estPompage(produit) &&
+          (categorie.includes("entreprise") || categorie.includes("maison"))
+        );
+      }
+
+      return categorie.includes("maison") && !estPompage(produit);
+    });
+
+    const avecEnergie = profilCompatible
+      .map((produit) => ({
+        produit,
+        energie: energieProduit(produit),
+      }))
+      .filter((item) => item.energie !== null);
+
+    const nonVerifiables = profilCompatible.filter(
+      (produit) => energieProduit(produit) === null
+    );
+
+    const suffisants = avecEnergie
+      .filter(({ energie }) => energie >= kwhJourFinal * 1.1)
+      .filter(({ produit }) => {
+        const pv = puissancePanneauxProduit(produit);
+        const batterie = batterieProduit(produit);
+        const onduleur = onduleurProduit(produit);
+
+        // Si la donnée technique est disponible, elle doit satisfaire
+        // le besoin calculé. Si elle est absente, on ne la devine pas.
+        if (pv !== null && pv < kwcFinal * 1000) return false;
+        if (batterie !== null && batterie < batterieFinale) return false;
+        if (
+          onduleur !== null &&
+          puissanceOnduleurFinale > 0 &&
+          onduleur < puissanceOnduleurFinale
+        ) {
+          return false;
+        }
+
+        return true;
+      })
+      .sort((a, b) => a.energie - b.energie);
+
+    const insuffisants = avecEnergie
+      .filter(({ energie }) => energie < kwhJourFinal * 1.1)
+      .sort((a, b) => b.energie - a.energie)
+      .map(({ produit }) => produit);
+
+    return {
+      recommandes: suffisants.slice(0, 3).map(({ produit }) => produit),
+      insuffisants,
+      nonVerifiables,
+    };
+  }, [
+    produits,
+    profil,
+    kwhJourFinal,
+    kwcFinal,
+    batterieFinale,
+    puissanceOnduleurFinale,
+  ]);
+
+  const produitsRecommandes = evaluationProduits.recommandes;
+
+  function modifierAppareil(id, champ, valeur) {
+    setAppareils((precedents) =>
+      precedents.map((appareil) =>
+        appareil.id === id ? { ...appareil, [champ]: valeur } : appareil
+      )
+    );
+
+    setResultatVisible(false);
+  }
+
+  function modifierTranche(index, champ, valeur) {
+    setTranches((precedentes) =>
+      precedentes.map((tranche, i) =>
+        i === index ? { ...tranche, [champ]: valeur } : tranche
+      )
+    );
+
+    setResultatVisible(false);
+  }
+
+  function ajouterAppareil() {
+    const puissance = nombreValide(appareilPersonnalise.puissance);
+    const quantite = nombreValide(appareilPersonnalise.quantite);
+    const jour = nombreValide(appareilPersonnalise.jour);
+    const nuit = nombreValide(appareilPersonnalise.nuit);
+
+    if (
+      !appareilPersonnalise.nom.trim() ||
+      puissance <= 0 ||
+      quantite <= 0 ||
+      jour > 24 ||
+      nuit > 24
+    ) {
+      setErreurFormulaire(
+        "Indique le nom, une puissance et une quantité valides. Les heures doivent être comprises entre 0 et 24."
+      );
+      return;
+    }
+
+    setAppareilsPerso((precedents) => [
+      ...precedents,
+      {
+        id: `personnalise-${Date.now()}-${precedents.length}`,
+        nom: appareilPersonnalise.nom.trim(),
+        puissance,
+        quantite,
+        jour,
+        nuit,
+        categorie: "Personnalisé",
+        personnalise: true,
+      },
+    ]);
+
+    setAppareilPersonnalise({
+      nom: "",
+      puissance: "500",
+      quantite: "1",
+      jour: "4",
+      nuit: "0",
+    });
+
+    setErreurFormulaire("");
+    setResultatVisible(false);
+  }
+
+  function supprimerAppareil(id) {
+    setAppareilsPerso((precedents) =>
+      precedents.filter((appareil) => appareil.id !== id)
+    );
+
+    setResultatVisible(false);
+  }
+
+  // Important : aucun scroll vers le haut lors d'un changement d'étape.
+  function allerEtapeSuivante() {
+    setErreurFormulaire("");
+
+    if (
+      etape === 3 &&
+      calcul.nombreAppareils === 0 &&
+      consommationDeclaree === 0
+    ) {
+      setErreurFormulaire(
+        "Ajoute au moins un appareil ou indique une consommation connue au compteur."
+      );
+      return;
+    }
+
+    setEtape((precedente) => Math.min(4, precedente + 1));
+  }
+
+  function allerEtapePrecedente() {
+    setErreurFormulaire("");
+    setEtape((precedente) => Math.max(1, precedente - 1));
+  }
+
+  function calculerDimensionnement(event) {
+    event.preventDefault();
+    setErreurFormulaire("");
+
+    if (!nom.trim() || !telephone.trim()) {
+      setErreurFormulaire("Le nom et le téléphone/WhatsApp sont obligatoires.");
+      return;
+    }
+
+    if (calcul.nombreAppareils === 0 && consommationDeclaree === 0) {
+      setErreurFormulaire(
+        "Renseigne tes appareils ou la consommation électrique de ton compteur."
+      );
+      setEtape(3);
+      return;
+    }
+
+    if (kwhJourFinal <= 0) {
+      setErreurFormulaire(
+        "La consommation calculée est nulle. Vérifie les quantités, les puissances et les consommations renseignées."
+      );
+      return;
+    }
+
+    setResultatVisible(true);
+
+    // Le défilement se fait uniquement vers les résultats après le calcul.
+    window.setTimeout(() => {
+      document.getElementById("resultat-dimensionnement")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
     }, 150);
   }
 
-  function supprimerAppareil(
-    id
-  ) {
-    setAppareils(
-      (ancien) => {
-        const copie = {
-          ...ancien,
-        };
+  function messageDevis() {
+    const listeAppareils = appareilsTous
+      .filter((appareil) => nombreValide(appareil.quantite) > 0)
+      .map(
+        (appareil) =>
+          `- ${appareil.nom} : ${appareil.quantite} x ${appareil.puissance} W, ${appareil.jour} h/jour et ${appareil.nuit} h/nuit`
+      )
+      .join("\n");
 
-        delete copie[id];
+    const listeProduits = produitsRecommandes.length
+      ? produitsRecommandes
+          .map((produit) => `- ${nomProduit(produit)}`)
+          .join("\n")
+      : "Aucun kit n'a pu être confirmé automatiquement.";
 
-        return copie;
-      }
-    );
-
-    setAppareilActif(null);
+    return [
+      "Bonjour Solar Smart, je souhaite recevoir un devis pour mon installation solaire.",
+      "",
+      `Nom : ${nom}`,
+      `Téléphone : ${telephone}`,
+      `Ville/quartier : ${ville || "Non renseigné"}`,
+      `E-mail : ${email || "Non renseigné"}`,
+      `Profil : ${profil === "residentiel" ? "Résidentiel" : profil === "entreprise" ? "Entreprise" : "Pompage solaire"}`,
+      `Compteur : ${compteur === "woyofal" ? "Woyofal" : compteur === "senelec" ? "Senelec" : "Aucun compteur"}`,
+      `Abonnement : ${typeAbonnement}`,
+      `Montant déclaré : ${FCFA(montantDeclare)}`,
+      `Consommation déclarée au compteur : ${fmt(consommationDeclaree)} kWh/mois`,
+      `Consommation calculée par les appareils : ${fmt(calcul.kwhMois)} kWh/mois`,
+      `Consommation de référence retenue : ${fmt(kwhMoisFinal)} kWh/mois`,
+      `Puissance photovoltaïque indicative : ${fmt(kwcFinal)} kWc`,
+      `Panneaux de 550 W indicatifs : ${panneauxFinal}`,
+      `Stockage indicatif : ${fmt(batterieFinale)} kWh`,
+      `Onduleur indicatif : ${fmt(puissanceOnduleurFinale)} kW`,
+      "",
+      "Appareils renseignés :",
+      listeAppareils || "Aucun appareil détaillé",
+      "",
+      "Kits répondant aux critères renseignés :",
+      listeProduits,
+      "",
+      `Précisions : ${precision || "Aucune"}`,
+      "",
+      "Merci de vérifier les caractéristiques techniques et de me proposer un devis adapté.",
+    ].join("\n");
   }
 
-  /*
-   * ---------------------------------------------------------
-   * LANCEMENT ESTIMATION
-   * ---------------------------------------------------------
-   */
-
-  async function lancerEstimation() {
-    setErreur("");
-
-    setResultat(null);
-
-    let energieJour = 0;
-
-    let puissancePointeW = 0;
-
-    let profilCharge = [];
-
-    if (
-      source ===
-      "facture"
-    ) {
-      const kWh =
-        Number(
-          kwhFacture
-        ) || 0;
-
-      if (kWh <= 0) {
-        setErreur(
-          "Indiquez votre consommation mensuelle en kWh."
-        );
-        return;
-      }
-
-      energieJour =
-        kWh / 30;
-
-      puissancePointeW =
-        Number(
-          puissanceSouscrite
-        ) > 0
-          ? Number(
-              puissanceSouscrite
-            ) * 1000
-          : 0;
-
-      profilCharge =
-        creerProfilFacture(
-          energieJour,
-          Number(
-            jourShare
-          ) || 45
-        );
-    } else {
-      energieJour =
-        resumeAppareils.energie;
-
-      puissancePointeW =
-        resumeAppareils.puissance;
-
-      if (
-        energieJour <= 0
-      ) {
-        setErreur(
-          "Ajoutez au moins un appareil à votre estimation."
-        );
-        return;
-      }
-
-      profilCharge =
-        creerProfilAppareils(
-          appareilsActifs,
-          appareils
-        );
-
-      const sommeProfil =
-        profilCharge.reduce(
-          (a, b) => a + b,
-          0
-        );
-
-      if (
-        sommeProfil <= 0
-      ) {
-        setErreur(
-          "Le profil de consommation est vide."
-        );
-        return;
-      }
-
-      const energieJourCalculee =
-        sommeProfil;
-
-      const partJour =
-        profilCharge
-          .slice(8, 18)
-          .reduce(
-            (a, b) => a + b,
-            0
-          ) /
-        energieJourCalculee;
-
-      setJourShare(
-        Math.round(
-          partJour * 100
-        )
-      );
-    }
-
-    const kwhMois =
-      energieJour * 30;
-
-    const consommationAnnuelle =
-      energieJour * 365;
-
-    setChargement(true);
-
-    try {
-      /*
-       * -----------------------------------------------------
-       * APPEL PVGIS
-       * -----------------------------------------------------
-       */
-
-      const response =
-        await fetch(
-          "/api/estimation-solaire",
-          {
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json",
-            },
-
-            body: JSON.stringify({
-              latitude:
-                Number(
-                  latitude
-                ),
-
-              longitude:
-                Number(
-                  longitude
-                ),
-
-              angle:
-                Number(
-                  angle
-                ),
-
-              aspect:
-                Number(
-                  aspect
-                ),
-
-              pertes:
-                Number(
-                  pertes
-                ),
-            }),
-          }
-        );
-
-      const data =
-        await response.json();
-
-      if (
-        !response.ok ||
-        !data.success
-      ) {
-        throw new Error(
-          data?.error ||
-            "PVGIS n'a pas répondu correctement."
-        );
-      }
-
-      const production1kWpAn =
-        Number(
-          data.annualKWhPerKWp
-        ) || 0;
-
-      const productionMensuelle =
-        Array.isArray(
-          data.monthlyKWhPerKWp
-        )
-          ? data.monthlyKWhPerKWp
-          : [];
-
-      const hourly =
-        Array.isArray(
-          data.hourly
-        )
-          ? data.hourly.map(
-              (item) =>
-                Number(
-                  item.powerKW
-                ) || 0
-            )
-          : [];
-
-      if (
-        production1kWpAn <= 0 ||
-        hourly.length < 8500
-      ) {
-        throw new Error(
-          "Les données PVGIS sont insuffisantes pour réaliser le dimensionnement."
-        );
-      }
-
-      /*
-       * -----------------------------------------------------
-       * SCENARIOS
-       * -----------------------------------------------------
-       */
-
-      const objectifs = [
-        {
-          id: "economique",
-
-          nom: "Économie",
-
-          couvertureCible:
-            0.45,
-
-          batterieFacteur:
-            0.65,
-
-          description:
-            "Réduction importante de l'énergie achetée au réseau avec un stockage modéré.",
-        },
-
-        {
-          id: "equilibre",
-
-          nom: "Équilibre",
-
-          couvertureCible:
-            0.65,
-
-          batterieFacteur:
-            1,
-
-          description:
-            "Compromis entre production solaire, stockage et énergie restante du réseau.",
-        },
-
-        {
-          id: "autonomie",
-
-          nom: "Autonomie renforcée",
-
-          couvertureCible:
-            0.85,
-
-          batterieFacteur:
-            1.35,
-
-          description:
-            "Davantage de production et de stockage pour réduire fortement le recours au réseau.",
-        },
-      ];
-
-      /*
-       * -----------------------------------------------------
-       * CALCUL FACTURE
-       * -----------------------------------------------------
-       */
-
-      const factureModelee =
-        calculerFacture(
-          kwhMois,
-          tarifId,
-          Number(
-            puissanceSouscrite
-          ) || 0
-        );
-
-      /*
-       * -----------------------------------------------------
-       * SCENARIOS TECHNIQUES
-       * -----------------------------------------------------
-       */
-
-      const scenarios =
-        objectifs.map(
-          (objectif) => {
-            /*
-             * Dimensionnement initial selon
-             * la production annuelle PVGIS.
-             *
-             * 1.05 = petite marge de conception.
-             */
-
-            const pvCible =
-              (consommationAnnuelle *
-                objectif.couvertureCible *
-                1.05) /
-              production1kWpAn;
-
-            let nombrePanneaux =
-              Math.max(
-                1,
-                Math.ceil(
-                  (pvCible *
-                    1000) /
-                    panneauW
-                )
-              );
-
-            let pvKw =
-              (nombrePanneaux *
-                panneauW) /
-              1000;
-
-            /*
-             * Batterie.
-             */
-
-            const batterieKWh =
-              calculerBatterie(
-                profilCharge,
-                objectif.batterieFacteur
-              );
-
-            /*
-             * Simulation réelle sur toutes les heures
-             * PVGIS disponibles.
-             */
-
-            const simulation =
-              simulerSysteme({
-                pvKw,
-
-                productionHoraire1kWp:
-                  hourly,
-
-                profilCharge,
-
-                batterieKWh,
-              });
-
-            /*
-             * Puissance d'onduleur.
-             *
-             * On prend :
-             * - 1.25 × puissance de pointe
-             * - au minimum une fraction de la puissance PV.
-             */
-
-            const puissanceChargeKW =
-              puissancePointeW /
-              1000;
-
-            const onduleurBase =
-              Math.max(
-                puissanceChargeKW *
-                  1.25,
-
-                pvKw * 0.8
-              );
-
-            const onduleurKVA =
-              onduleurBase /
-              0.9;
-
-            /*
-             * Détection charges moteur.
-             */
-
-            const presenceMoteur =
-              appareilsActifs.some(
-                (appareil) => {
-                  if (
-                    !appareil.moteur
-                  ) {
-                    return false;
-                  }
-
-                  return (
-                    Number(
-                      appareils[
-                        appareil.id
-                      ]?.quantite
-                    ) > 0
-                  );
-                }
-              );
-
-            /*
-             * Production mensuelle.
-             */
-
-            const productionMensuelleScenario =
-              productionMensuelle.map(
-                (value) =>
-                  Number(value) *
-                  pvKw
-              );
-
-            const productionAnnuelle =
-              simulation.energiePV;
-
-            /*
-             * Taux de couverture réel.
-             */
-
-            const couvertureReelle =
-              simulation.couvertureCharge;
-
-            /*
-             * Taux d'autoconsommation PV.
-             */
-
-            const autoconsommation =
-              simulation.tauxAutoconsommation;
-
-            /*
-             * Économie approximative.
-             *
-             * On utilise ici la fraction de consommation
-             * effectivement couverte, pas simplement
-             * la production annuelle PV.
-             */
-
-            const economie =
-              factureModelee *
-              Math.min(
-                0.9,
-                couvertureReelle /
-                  100
-              );
-
-            const factureApres =
-              Math.max(
-                0,
-                factureModelee -
-                  economie
-              );
-
-            /*
-             * Si l'utilisateur a donné un montant
-             * réel de facture, on le garde séparément.
-             */
-
-            return {
-              ...objectif,
-
-              pvKw,
-
-              nombrePanneaux,
-
-              puissancePanneau:
-                panneauW,
-
-              productionAnnuelle,
-
-              productionMensuelle:
-                productionMensuelleScenario,
-
-              batterieKwh:
-                batterieKWh,
-
-              onduleurKw:
-                onduleurBase,
-
-              onduleurKva:
-                onduleurKVA,
-
-              couvertureReelle,
-
-              autoconsommation,
-
-              energieDirecte:
-                simulation.energieDirecte,
-
-              energieBatterie:
-                simulation.energieBatterie,
-
-              energieReseau:
-                simulation.energieReseau,
-
-              energiePerdue:
-                simulation.energiePerdue,
-
-              factureActuelle:
-                factureModelee,
-
-              factureApres,
-
-              economieMensuelle:
-                economie,
-
-              economieAnnuelle:
-                economie * 12,
-
-              presenceMoteur,
-            };
-          }
-        );
-
-      /*
-       * -----------------------------------------------------
-       * PROFIL 24 H POUR AFFICHAGE
-       * -----------------------------------------------------
-       */
-
-      const profil24h =
-        profilCharge.map(
-          (value, heure) => ({
-            heure,
-            kWh:
-              Number(value) || 0,
-          })
-        );
-
-      /*
-       * -----------------------------------------------------
-       * RESULTAT
-       * -----------------------------------------------------
-       */
-
-      setResultat({
-        source,
-
-        kwhMois,
-
-        energieJour,
-
-        consommationAnnuelle,
-
-        puissanceMaxW:
-          puissancePointeW,
-
-        factureModelee,
-
-        montantFacture:
-          Number(
-            montantFacture
-          ) || 0,
-
-        production1kWpAn,
-
-        productionMensuelle,
-
-        hourly,
-
-        profil24h,
-
-        scenarios,
-
-        localisation: {
-          ville,
-          latitude:
-            Number(latitude),
-          longitude:
-            Number(longitude),
-        },
-      });
-    } catch (error) {
-      console.error(error);
-
-      setErreur(
-        error?.message ||
-          "Une erreur est survenue pendant l'estimation."
-      );
-    } finally {
-      setChargement(false);
-    }
-  }
-
-  /*
-   * ---------------------------------------------------------
-   * WHATSAPP
-   * ---------------------------------------------------------
-   */
-
-  const messageWhatsApp =
-    resultat
-      ? `Bonjour Solart Smart.
-
-Je viens de réaliser une pré-estimation solaire.
-
-Secteur : ${configSecteur.nom}
-
-Consommation :
-${formatNombre(
-  resultat.kwhMois
-)} kWh/mois
-
-Moyenne :
-${formatNombre(
-  resultat.energieJour
-)} kWh/jour
-
-Localisation :
-${ville}
-
-Coordonnées :
-${Number(
-  latitude
-).toFixed(6)}, ${Number(
-  longitude
-).toFixed(6)}
-
-PVGIS :
-${formatNombre(
-  resultat.production1kWpAn
-)} kWh/an/kWc
-
-Je souhaite faire vérifier le dimensionnement et obtenir un devis précis.`
-      : "";
-
-  /*
-   * ---------------------------------------------------------
-   * RENDU
-   * ---------------------------------------------------------
-   */
+  const urlWhatsAppDevis =
+    `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(messageDevis())}`;
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900">
-
-      {/* HEADER */}
-
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
-
-          <Link
-            href="/"
-            className="flex items-center gap-3"
-          >
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-950 text-xl font-black text-white">
-              S
-            </div>
-
-            <div>
-              <div className="text-lg font-black">
-                <span className="text-blue-950">
-                  Solart
-                </span>{" "}
-                <span className="text-orange-500">
-                  Smart
-                </span>
-              </div>
-
-              <div className="text-[11px] font-semibold text-slate-500">
+    <main className="min-h-screen overflow-x-hidden bg-white text-slate-900">
+      {/* NAVIGATION */}
+      <header className="fixed inset-x-0 top-0 z-[100] border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur-2xl">
+        <div className="mx-auto flex h-[70px] w-full max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+          <Link href="/" className="flex min-w-0 items-center gap-2.5">
+            <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm">
+              <Image
+                src="/logo.png"
+                alt="Solar Smart"
+                fill
+                sizes="40px"
+                className="object-contain p-1"
+              />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-lg font-black tracking-tight">
+                <span className="text-blue-800">Solar</span>{" "}
+                <span className="text-orange-500">Smart</span>
+              </span>
+              <span className="block text-[8px] font-bold uppercase tracking-[0.15em] text-slate-400">
                 Énergie solaire
-              </div>
-            </div>
+              </span>
+            </span>
           </Link>
 
-          <nav className="hidden gap-7 md:flex">
-            <Link
-              href="/"
-              className="text-sm font-bold text-slate-600 hover:text-blue-950"
-            >
+          <nav className="hidden items-center gap-1 md:flex">
+            <Link href="/" className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-blue-50 hover:text-blue-800">
               Accueil
             </Link>
-
-            <Link
-              href="/#services"
-              className="text-sm font-bold text-slate-600 hover:text-blue-950"
-            >
+            <Link href="/#services" className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-blue-50 hover:text-blue-800">
               Services
             </Link>
-
-            <Link
-              href="/#produits"
-              className="text-sm font-bold text-slate-600 hover:text-blue-950"
-            >
+            <Link href="/#produits" className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-blue-50 hover:text-blue-800">
               Produits
             </Link>
-
-            <Link
-              href="/#contact"
-              className="rounded-full bg-blue-950 px-5 py-2.5 text-sm font-bold text-white"
-            >
-              Contact
+            <Link href="/estimation" className="rounded-xl bg-blue-50 px-4 py-2.5 text-sm font-bold text-blue-800">
+              Estimation
+            </Link>
+            <span className="mx-2 h-7 w-px bg-slate-200" />
+            <CartIcon />
+            <Link href="/#contact" className="ml-2 rounded-full bg-blue-800 px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-900">
+              Contact <span className="ml-1 text-orange-400">→</span>
             </Link>
           </nav>
 
-          <a
-            href={WHATSAPP}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-full bg-green-500 px-4 py-2.5 text-sm font-black text-white"
-          >
-            WhatsApp
-          </a>
+          <div className="flex items-center gap-2 md:hidden">
+            <CartIcon />
+            <Link href="/" className="rounded-xl bg-slate-100 px-3 py-2 text-sm font-bold text-blue-900">
+              Accueil
+            </Link>
+          </div>
         </div>
       </header>
 
+      <div className="h-[70px]" />
+
       {/* HERO */}
+      <section className="relative overflow-hidden bg-slate-950 px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
+        <div className="absolute -right-36 -top-40 h-96 w-96 rounded-full bg-blue-600/20 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-orange-500/10 blur-3xl" />
 
-      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800">
-        <div className="mx-auto max-w-5xl px-5 py-16 text-center">
+        <div className="relative mx-auto grid w-full max-w-7xl items-center gap-10 lg:grid-cols-[1.15fr_0.85fr]">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-[10px] font-extrabold uppercase tracking-[0.16em] text-blue-100 sm:text-xs">
+              <span className="h-2 w-2 rounded-full bg-orange-400" />
+              Simulateur solaire Solar Smart
+            </span>
 
-          <div className="inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-wider text-blue-100">
-            Pré-dimensionnement solaire
+            <h1 className="mt-6 max-w-3xl text-4xl font-black leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl">
+              Trouvez une solution solaire
+              <span className="mt-2 block text-orange-400">
+                adaptée à vos besoins.
+              </span>
+            </h1>
+
+            <p className="mt-6 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
+              Renseignez vos appareils et votre consommation. Le simulateur
+              calcule vos besoins et recherche les kits du catalogue qui
+              répondent aux critères techniques disponibles.
+            </p>
+
+            <div className="mt-7 flex flex-wrap gap-3">
+              <span className="rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-blue-100">
+                Maison et entreprise
+              </span>
+              <span className="rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-blue-100">
+                Pompage solaire
+              </span>
+              <span className="rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-blue-100">
+                Devis WhatsApp
+              </span>
+            </div>
           </div>
 
-          <h1 className="mt-6 text-4xl font-black leading-tight text-white sm:text-6xl">
-            Estimez votre installation
-            <span className="block text-orange-400">
-              avec vos vraies données.
-            </span>
-          </h1>
-
-          <p className="mx-auto mt-6 max-w-3xl text-base leading-7 text-blue-100 sm:text-lg">
-            Facture Senelec, appareils,
-            puissance, profil de consommation,
-            localisation et production PVGIS.
-          </p>
-
-          <div className="mx-auto mt-8 grid max-w-3xl gap-3 sm:grid-cols-3">
-
-            <div className="rounded-2xl border border-white/10 bg-white/10 p-5 text-left">
-              <div className="text-2xl">
-                📄
-              </div>
-
-              <div className="mt-2 font-black text-white">
-                Facture
-              </div>
-
-              <div className="mt-1 text-xs text-blue-200">
-                Consommation réelle
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/10 p-5 text-left">
-              <div className="text-2xl">
-                ⚡
-              </div>
-
-              <div className="mt-2 font-black text-white">
-                Appareils
-              </div>
-
-              <div className="mt-1 text-xs text-blue-200">
-                Profil détaillé
+          <div className="hidden lg:block">
+            <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-4 shadow-2xl">
+              <div className="rounded-[1.5rem] bg-gradient-to-br from-blue-900 via-blue-800 to-blue-950 p-8">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-500 text-3xl">
+                    ☀️
+                  </span>
+                  <span className="rounded-full bg-green-400/10 px-3 py-2 text-xs font-bold text-green-300">
+                    ÉNERGIE PROPRE
+                  </span>
+                </div>
+                <p className="mt-9 text-xs font-bold uppercase tracking-[0.2em] text-blue-300">
+                  Votre projet
+                </p>
+                <p className="mt-2 text-3xl font-black text-white">
+                  Du soleil à l'électricité.
+                </p>
+                <p className="mt-4 text-sm leading-7 text-blue-100/70">
+                  Une étude structurée de vos besoins avant validation du
+                  matériel par notre équipe.
+                </p>
+                <div className="mt-7 grid grid-cols-3 gap-3">
+                  {[
+                    ["01", "Profil"],
+                    ["02", "Énergie"],
+                    ["03", "Solution"],
+                  ].map(([n, label]) => (
+                    <div key={n} className="rounded-xl border border-white/10 bg-white/[0.06] p-3">
+                      <p className="text-xs font-black text-orange-400">{n}</p>
+                      <p className="mt-1 text-xs font-bold text-white">{label}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/10 p-5 text-left">
-              <div className="text-2xl">
-                ☀️
-              </div>
-
-              <div className="mt-2 font-black text-white">
-                PVGIS
-              </div>
-
-              <div className="mt-1 text-xs text-blue-200">
-                Production horaire
-              </div>
-            </div>
-
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 py-10">
+      {/* SIMULATEUR */}
+      <section className="bg-slate-50 px-4 py-10 sm:px-6 sm:py-16 lg:px-8">
+        <div className="mx-auto grid w-full max-w-7xl items-start gap-7 lg:grid-cols-[minmax(0,1fr)_330px]">
+          <div className="min-w-0 rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-7 lg:p-9">
+            <BarreProgression etape={etape} />
 
-        {/* SECTEUR */}
-
-        <section className="mb-8">
-
-          <div className="mb-5">
-            <div className="text-xs font-black uppercase tracking-widest text-orange-500">
-              01 — Secteur
-            </div>
-
-            <h2 className="mt-2 text-3xl font-black text-blue-950">
-              Quel est votre secteur ?
-            </h2>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-3">
-
-            {Object.entries(
-              SECTEURS
-            ).map(
-              ([id, item]) => {
-                const active =
-                  secteur === id;
-
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() =>
-                      changerSecteur(
-                        id
-                      )
-                    }
-                    className={`rounded-3xl border p-6 text-left transition ${
-                      active
-                        ? "border-orange-400 bg-orange-50 shadow-xl"
-                        : "border-slate-200 bg-white hover:border-blue-300 hover:shadow-lg"
-                    }`}
-                  >
-                    <div className="text-4xl">
-                      {item.icon}
-                    </div>
-
-                    <div className="mt-4 text-xl font-black text-blue-950">
-                      {item.nom}
-                    </div>
-
-                    <div className="mt-1 text-sm text-slate-500">
-                      {item.description}
-                    </div>
-
-                    <div className="mt-4 text-xs font-black text-orange-600">
-                      {item.appareils.length} appareils disponibles
-                    </div>
-                  </button>
-                );
-              }
-            )}
-
-          </div>
-        </section>
-
-        <div className="space-y-8">
-
-          {/* LOCALISATION */}
-
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-
-            <div className="text-xs font-black uppercase tracking-widest text-orange-500">
-              02 — Localisation
-            </div>
-
-            <h2 className="mt-2 text-2xl font-black text-blue-950">
-              Où se trouve l'installation ?
-            </h2>
-
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
-
-              <select
-                value={
-                  ville || ""
-                }
-                onChange={(e) =>
-                  choisirVille(
-                    e.target.value
-                  )
-                }
-                className="rounded-2xl border border-slate-300 bg-white p-4 font-bold outline-none focus:border-blue-700"
-              >
-                {VILLES.map(
-                  (item) => (
-                    <option
-                      key={
-                        item.nom
-                      }
-                      value={
-                        item.nom
-                      }
-                    >
-                      {item.nom}
-                    </option>
-                  )
-                )}
-
-                <option value="Position actuelle">
-                  📍 Position actuelle
-                </option>
-              </select>
-
-              <button
-                type="button"
-                onClick={
-                  utiliserMaPosition
-                }
-                className="rounded-2xl bg-blue-950 px-5 py-4 font-black text-white"
-              >
-                📍 Utiliser ma position
-              </button>
-
-            </div>
-
-            {localisationMessage && (
-              <div className="mt-4 rounded-2xl bg-blue-50 p-4 text-sm font-bold text-blue-900">
-                {localisationMessage}
-              </div>
-            )}
-
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
-
+            {/* ÉTAPE 1 */}
+            {etape === 1 && (
               <div>
-                <label className="mb-2 block text-xs font-black uppercase text-slate-500">
-                  Latitude
-                </label>
-
-                <input
-                  type="number"
-                  step="any"
-                  value={
-                    latitude ?? ""
-                  }
-                  onChange={(e) =>
-                    setLatitude(
-                      e.target.value
-                    )
-                  }
-                  className="w-full rounded-2xl border border-slate-300 p-4 font-bold"
+                <SectionTitre
+                  numero="01"
+                  titre="Votre profil"
+                  description="Choisissez l'usage principal de votre future installation."
                 />
-              </div>
 
-              <div>
-                <label className="mb-2 block text-xs font-black uppercase text-slate-500">
-                  Longitude
-                </label>
-
-                <input
-                  type="number"
-                  step="any"
-                  value={
-                    longitude ?? ""
-                  }
-                  onChange={(e) =>
-                    setLongitude(
-                      e.target.value
-                    )
-                  }
-                  className="w-full rounded-2xl border border-slate-300 p-4 font-bold"
-                />
-              </div>
-
-            </div>
-
-            <div className="mt-5 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
-              PVGIS utilisera :
-              <strong className="ml-1 text-blue-950">
-                {Number(
-                  latitude
-                ).toFixed(5)}
-              </strong>
-              {" / "}
-              <strong className="text-blue-950">
-                {Number(
-                  longitude
-                ).toFixed(5)}
-              </strong>
-            </div>
-
-          </section>
-
-          {/* SOURCE */}
-
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-
-            <div className="text-xs font-black uppercase tracking-widest text-orange-500">
-              03 — Consommation
-            </div>
-
-            <h2 className="mt-2 text-2xl font-black text-blue-950">
-              Comment voulez-vous calculer votre consommation ?
-            </h2>
-
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
-
-              <button
-                type="button"
-                onClick={() =>
-                  setSource(
-                    "facture"
-                  )
-                }
-                className={`rounded-3xl border p-6 text-left ${
-                  source ===
-                  "facture"
-                    ? "border-orange-400 bg-orange-50"
-                    : "border-slate-200"
-                }`}
-              >
-                <div className="text-3xl">
-                  📄
-                </div>
-
-                <div className="mt-3 font-black text-blue-950">
-                  J'ai une facture Senelec
-                </div>
-
-                <div className="mt-1 text-sm text-slate-500">
-                  Utiliser les kWh mensuels
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  setSource(
-                    "appareils"
-                  )
-                }
-                className={`rounded-3xl border p-6 text-left ${
-                  source ===
-                  "appareils"
-                    ? "border-orange-400 bg-orange-50"
-                    : "border-slate-200"
-                }`}
-              >
-                <div className="text-3xl">
-                  ⚡
-                </div>
-
-                <div className="mt-3 font-black text-blue-950">
-                  Je connais mes appareils
-                </div>
-
-                <div className="mt-1 text-sm text-slate-500">
-                  Calculer appareil par appareil
-                </div>
-              </button>
-
-            </div>
-
-            {source ===
-              "facture" && (
-              <div className="mt-6 space-y-5">
-
-                <label className="block cursor-pointer rounded-3xl border-2 border-dashed border-blue-200 bg-blue-50 p-7 text-center">
-
-                  <div className="text-4xl">
-                    📸
-                  </div>
-
-                  <div className="mt-3 font-black text-blue-950">
-                    Joindre la facture
-                  </div>
-
-                  <div className="mt-1 text-xs text-slate-500">
-                    JPG, PNG ou PDF
-                  </div>
-
-                  <input
-                    type="file"
-                    accept="image/*,.pdf,application/pdf"
-                    className="hidden"
-                    onChange={(e) =>
-                      setFichierFacture(
-                        e.target
-                          .files?.[0] ||
-                          null
-                      )
-                    }
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <ChoixCarte
+                    actif={profil === "residentiel"}
+                    onClick={() => setProfil("residentiel")}
+                    icone="🏠"
+                    titre="Résidentiel"
+                    description="Maison, appartement ou villa."
                   />
+                  <ChoixCarte
+                    actif={profil === "entreprise"}
+                    onClick={() => setProfil("entreprise")}
+                    icone="🏢"
+                    titre="Entreprise"
+                    description="Bureau, commerce ou atelier."
+                  />
+                  <ChoixCarte
+                    actif={profil === "pompage"}
+                    onClick={() => setProfil("pompage")}
+                    icone="💧"
+                    titre="Pompage"
+                    description="Forage, irrigation et eau."
+                  />
+                </div>
 
-                </label>
-
-                {fichierFacture && (
-                  <div className="rounded-2xl bg-green-50 p-4 text-sm font-bold text-green-800">
-                    ✓{" "}
-                    {
-                      fichierFacture.name
-                    }
+                {profil === "pompage" && (
+                  <div className="mt-6 rounded-2xl border border-cyan-200 bg-cyan-50 p-4">
+                    <p className="font-bold text-cyan-950">
+                      Informations nécessaires au pompage
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-cyan-900/80">
+                      Le dimensionnement d'une pompe dépend aussi du débit
+                      souhaité, de la profondeur du forage, de la hauteur de
+                      refoulement et des heures de pompage. Ces informations
+                      devront être vérifiées par un spécialiste.
+                    </p>
                   </div>
                 )}
 
-                <div className="grid gap-4 md:grid-cols-2">
-
-                  <div>
-                    <label className="mb-2 block text-sm font-black">
-                      Consommation mensuelle
-                    </label>
-
-                    <input
-                      type="number"
-                      min="0"
-                      value={
-                        kwhFacture
-                      }
-                      onChange={(e) =>
-                        setKwhFacture(
-                          e.target
-                            .value
-                        )
-                      }
-                      placeholder="Ex : 600"
-                      className="w-full rounded-2xl border border-slate-300 p-4"
-                    />
-
-                    <div className="mt-1 text-xs text-slate-400">
-                      kWh/mois
-                    </div>
+                <div className="mt-8 rounded-2xl bg-slate-50 p-4 sm:p-5">
+                  <h3 className="font-black text-blue-950">
+                    Comment fonctionne le simulateur ?
+                  </h3>
+                  <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                    {[
+                      ["1", "Décrire", "Indique ton profil et ton compteur."],
+                      ["2", "Calculer", "Renseigne tes appareils et leurs horaires."],
+                      ["3", "Comparer", "Consulte les kits correspondant aux données disponibles."],
+                    ].map(([n, titre, description]) => (
+                      <div key={n} className="flex gap-3">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-orange-100 text-sm font-black text-orange-600">
+                          {n}
+                        </span>
+                        <div>
+                          <p className="text-sm font-black text-blue-950">{titre}</p>
+                          <p className="mt-1 text-xs leading-5 text-slate-500">{description}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-black">
-                      Montant facture
-                    </label>
-
-                    <input
-                      type="number"
-                      min="0"
-                      value={
-                        montantFacture
-                      }
-                      onChange={(e) =>
-                        setMontantFacture(
-                          e.target
-                            .value
-                        )
-                      }
-                      placeholder="Ex : 95000"
-                      className="w-full rounded-2xl border border-slate-300 p-4"
-                    />
-
-                    <div className="mt-1 text-xs text-slate-400">
-                      FCFA
-                    </div>
-                  </div>
-
                 </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-
-                  <div>
-                    <label className="mb-2 block text-sm font-black">
-                      Puissance souscrite
-                    </label>
-
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      value={
-                        puissanceSouscrite
-                      }
-                      onChange={(e) =>
-                        setPuissanceSouscrite(
-                          e.target
-                            .value
-                        )
-                      }
-                      placeholder="Ex : 6"
-                      className="w-full rounded-2xl border border-slate-300 p-4"
-                    />
-
-                    <div className="mt-1 text-xs text-slate-400">
-                      kW
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-black">
-                      Tarif Senelec
-                    </label>
-
-                    <select
-                      value={
-                        tarifId
-                      }
-                      onChange={(e) =>
-                        setTarifId(
-                          e.target
-                            .value
-                        )
-                      }
-                      className="w-full rounded-2xl border border-slate-300 bg-white p-4"
-                    >
-                      {configSecteur.tarifs.map(
-                        (id) => (
-                          <option
-                            key={id}
-                            value={id}
-                          >
-                            {
-                              TARIFS[
-                                id
-                              ].nom
-                            }
-                          </option>
-                        )
-                      )}
-                    </select>
-                  </div>
-
-                </div>
-
-                <div className="rounded-3xl border border-orange-200 bg-orange-50 p-5">
-
-                  <div className="font-black text-orange-950">
-                    Profil de consommation
-                  </div>
-
-                  <div className="mt-2 text-sm text-orange-900">
-                    Quelle part de votre consommation
-                    se fait approximativement pendant
-                    la journée ?
-                  </div>
-
-                  <div className="mt-5 flex items-center gap-5">
-
-                    <input
-                      type="range"
-                      min="10"
-                      max="90"
-                      value={
-                        jourShare
-                      }
-                      onChange={(e) =>
-                        setJourShare(
-                          Number(
-                            e.target
-                              .value
-                          )
-                        )
-                      }
-                      className="flex-1"
-                    />
-
-                    <div className="w-20 rounded-xl bg-orange-500 p-3 text-center font-black text-white">
-                      {
-                        jourShare
-                      }%
-                    </div>
-
-                  </div>
-
-                </div>
-
               </div>
             )}
 
-          </section>
+            {/* ÉTAPE 2 */}
+            {etape === 2 && (
+              <div>
+                <SectionTitre
+                  numero="02"
+                  titre="Votre compteur"
+                  description="Utilisez les données du compteur lorsqu'elles sont disponibles. Sinon, les appareils serviront de base."
+                />
 
-          {/* APPAREILS */}
-
-          {source ===
-            "appareils" && (
-            <section
-              ref={
-                appareilsRef
-              }
-              className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
-            >
-
-              <div className="text-xs font-black uppercase tracking-widest text-orange-500">
-                04 — Appareils
-              </div>
-
-              <h2 className="mt-2 text-2xl font-black text-blue-950">
-                Construisez votre profil de consommation
-              </h2>
-
-              <div className="mt-6 grid gap-3 sm:grid-cols-3">
-
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <div className="text-xs font-black uppercase text-slate-400">
-                    Appareils
-                  </div>
-
-                  <div className="mt-1 text-2xl font-black text-blue-950">
-                    {
-                      resumeAppareils.nombre
-                    }
-                  </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <ChoixCarte
+                    actif={compteur === "woyofal"}
+                    onClick={() => setCompteur("woyofal")}
+                    icone="🎫"
+                    titre="Woyofal"
+                    description="Compteur prépayé."
+                  />
+                  <ChoixCarte
+                    actif={compteur === "senelec"}
+                    onClick={() => setCompteur("senelec")}
+                    icone="🧾"
+                    titre="Senelec"
+                    description="Compteur à facture."
+                  />
+                  <ChoixCarte
+                    actif={compteur === "aucun"}
+                    onClick={() => setCompteur("aucun")}
+                    icone="⚡"
+                    titre="Sans compteur"
+                    description="Installation isolée ou nouveau projet."
+                  />
                 </div>
 
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <div className="text-xs font-black uppercase text-slate-400">
-                    Pointe
+                {compteur !== "aucun" && (
+                  <div className="mt-6">
+                    <p className="mb-3 text-sm font-bold text-slate-700">
+                      Type d'abonnement
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        ["monophase", "Monophasé"],
+                        ["triphase", "Triphasé"],
+                        ["inconnu", "Je ne sais pas"],
+                      ].map(([valeur, label]) => (
+                        <button
+                          type="button"
+                          key={valeur}
+                          onClick={() => setTypeAbonnement(valeur)}
+                          className={`rounded-xl border px-3 py-3 text-sm font-bold transition ${
+                            typeAbonnement === valeur
+                              ? "border-blue-700 bg-blue-50 text-blue-900"
+                              : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-
-                  <div className="mt-1 text-2xl font-black text-blue-950">
-                    {formatNombre(
-                      resumeAppareils.puissance /
-                        1000,
-                      2
-                    )}{" "}
-                    kW
-                  </div>
-                </div>
-
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <div className="text-xs font-black uppercase text-slate-400">
-                    Énergie
-                  </div>
-
-                  <div className="mt-1 text-2xl font-black text-blue-950">
-                    {formatNombre(
-                      resumeAppareils.energie,
-                      2
-                    )}{" "}
-                    kWh/j
-                  </div>
-                </div>
-
-              </div>
-
-              <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-
-                {appareilsActifs.map(
-                  (appareil) => {
-                    const ajoute =
-                      appareilAjoute(
-                        appareil
-                      );
-
-                    return (
-                      <button
-                        key={
-                          appareil.id
-                        }
-                        type="button"
-                        onClick={() =>
-                          ouvrirAppareil(
-                            appareil
-                          )
-                        }
-                        className={`rounded-3xl border p-5 text-left transition hover:-translate-y-1 hover:shadow-lg ${
-                          ajoute
-                            ? "border-green-300 bg-green-50"
-                            : "border-slate-200 bg-white"
-                        }`}
-                      >
-
-                        <div className="flex items-start justify-between">
-
-                          <div className="text-3xl">
-                            {
-                              appareil.icon
-                            }
-                          </div>
-
-                          <span
-                            className={`rounded-full px-3 py-1 text-[10px] font-black ${
-                              ajoute
-                                ? "bg-green-500 text-white"
-                                : "bg-slate-100 text-slate-500"
-                            }`}
-                          >
-                            {ajoute
-                              ? "✓ Ajouté"
-                              : "À configurer"}
-                          </span>
-
-                        </div>
-
-                        <div className="mt-4 font-black text-blue-950">
-                          {
-                            appareil.nom
-                          }
-                        </div>
-
-                        <div className="mt-1 text-xs text-slate-500">
-                          {
-                            appareil.puissance
-                          }{" "}
-                          W ·{" "}
-                          {
-                            appareil.heures
-                          }{" "}
-                          h/j
-                        </div>
-
-                      </button>
-                    );
-                  }
                 )}
 
-              </div>
+                {compteur === "woyofal" && (
+                  <div className="mt-6 rounded-2xl border border-orange-200 bg-orange-50 p-5">
+                    <h3 className="font-black text-orange-950">
+                      Informations Woyofal
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-orange-950/80">
+                      Les codes 813, 814 et 820 sont affichés comme repères.
+                      Leur fonction peut varier selon le compteur : vérifie les
+                      instructions de ton appareil avant de les utiliser.
+                    </p>
 
-              {appareilActif && (
-                <div
-                  ref={
-                    configurationRef
-                  }
-                  className="mt-8 overflow-hidden rounded-3xl border-2 border-orange-200 bg-orange-50"
-                >
+                    <div className="mt-4 grid grid-cols-3 gap-3">
+                      {["813", "814", "820"].map((code) => (
+                        <div key={code} className="rounded-xl border border-orange-200 bg-white p-3">
+                          <p className="text-2xl font-black text-orange-600">{code}</p>
+                          <p className="mt-1 text-[10px] leading-4 text-slate-500">
+                            Code de référence
+                          </p>
+                        </div>
+                      ))}
+                    </div>
 
-                  {(() => {
-                    const appareil =
-                      appareilsActifs.find(
-                        (item) =>
-                          item.id ===
-                          appareilActif
-                      );
+                    <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                      <Champ
+                        label="Montant habituel des recharges (FCFA)"
+                        value={montantWoyofal}
+                        onChange={setMontantWoyofal}
+                        type="number"
+                        min="0"
+                        placeholder="Ex. : 25000"
+                      />
+                      <Champ
+                        label="Consommation connue (kWh/mois)"
+                        value={kwhWoyofal}
+                        onChange={setKwhWoyofal}
+                        type="number"
+                        min="0"
+                        placeholder="Facultatif"
+                      />
+                    </div>
 
-                    if (!appareil) {
-                      return null;
-                    }
+                    <p className="mt-3 text-xs leading-5 text-orange-900/70">
+                      Le montant acheté ne permet pas, à lui seul, de déduire
+                      précisément les kWh consommés. Si tu ne connais pas ta
+                      consommation, renseigne tes appareils à l'étape suivante.
+                    </p>
+                  </div>
+                )}
 
-                    const q =
-                      valeurAppareil(
-                        appareil,
-                        "quantite"
-                      );
+                {compteur === "senelec" && (
+                  <div className="mt-6 rounded-2xl border border-blue-200 bg-blue-50 p-5">
+                    <h3 className="font-black text-blue-950">
+                      Consommation sur votre facture
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-blue-900/80">
+                      Saisis les kWh et les montants indiqués sur ta facture.
+                      Laisse à zéro toute tranche absente. Le calcul ne suppose
+                      aucun tarif fixe par kWh.
+                    </p>
 
-                    const w =
-                      valeurAppareil(
-                        appareil,
-                        "puissance"
-                      );
-
-                    const h =
-                      valeurAppareil(
-                        appareil,
-                        "heures"
-                      );
-
-                    const j =
-                      valeurAppareil(
-                        appareil,
-                        "jours"
-                      );
-
-                    const periode =
-                      valeurAppareil(
-                        appareil,
-                        "periode"
-                      );
-
-                    const energie =
-                      ((Number(q) ||
-                        0) *
-                        (Number(w) ||
-                          0) *
-                        (Number(h) ||
-                          0) *
-                        ((Number(j) ||
-                          0) /
-                          7)) /
-                      1000;
-
-                    return (
-                      <>
-                        <div className="flex items-center justify-between border-b border-orange-200 p-6">
-
-                          <div>
-                            <div className="text-xs font-black uppercase text-orange-600">
-                              Configuration
-                            </div>
-
-                            <h3 className="mt-1 text-2xl font-black text-blue-950">
-                              {
-                                appareil.nom
-                              }
-                            </h3>
+                    <div className="mt-5 space-y-4">
+                      {tranches.map((tranche, index) => (
+                        <div key={index} className="rounded-xl border border-blue-100 bg-white p-4">
+                          <p className="mb-3 text-sm font-black text-blue-950">
+                            Tranche {index + 1}
+                          </p>
+                          <div className="grid gap-4 sm:grid-cols-2">
+                            <Champ
+                              label="Montant (FCFA)"
+                              value={tranche.montant}
+                              onChange={(value) => modifierTranche(index, "montant", value)}
+                              type="number"
+                              min="0"
+                              placeholder="Montant"
+                            />
+                            <Champ
+                              label="Consommation (kWh)"
+                              value={tranche.kwh}
+                              onChange={(value) => modifierTranche(index, "kwh", value)}
+                              type="number"
+                              min="0"
+                              placeholder="kWh"
+                            />
                           </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setAppareilActif(
-                                null
-                              )
-                            }
-                            className="rounded-full bg-white px-4 py-2 text-sm font-black text-slate-600"
-                          >
-                            Fermer
-                          </button>
+                {compteur === "aucun" && (
+                  <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                    <h3 className="font-black text-blue-950">
+                      Pas de consommation connue ?
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                      Aucun problème. Le calcul reposera sur la puissance et
+                      la durée d'utilisation des appareils renseignés à l'étape suivante.
+                    </p>
+                  </div>
+                )}
 
+                {montantDeclare > 0 && (
+                  <div className="mt-4 rounded-xl bg-slate-50 p-4 text-sm">
+                    <span className="text-slate-500">Montant total déclaré : </span>
+                    <strong className="text-blue-950">{FCFA(montantDeclare)}</strong>
+                    {consommationDeclaree > 0 && (
+                      <p className="mt-1 text-slate-500">
+                        Consommation déclarée : {fmt(consommationDeclaree)} kWh/mois
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ÉTAPE 3 */}
+            {etape === 3 && (
+              <div>
+                <SectionTitre
+                  numero="03"
+                  titre="Vos appareils électriques"
+                  description="Indique la quantité, la puissance et les heures d'utilisation de chaque appareil."
+                />
+
+                <div className="mb-5 rounded-2xl border border-blue-100 bg-blue-50 p-4">
+                  <p className="text-sm leading-6 text-blue-950/80">
+                    Les puissances sont des valeurs moyennes. Si tu connais la
+                    puissance inscrite sur l'étiquette de ton appareil, utilise
+                    cette valeur. Les heures de jour et de nuit sont modifiables.
+                    Le même appareil ne doit pas être compté deux fois.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  {appareils.map((appareil) => (
+                    <div key={appareil.id} className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                          <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                            {appareil.categorie}
+                          </span>
+                          <h3 className="mt-2 font-black text-blue-950">{appareil.nom}</h3>
+                          <p className="mt-1 text-xs text-slate-500">
+                            Puissance unitaire : {fmt(appareil.puissance)} W
+                          </p>
                         </div>
 
-                        <div className="p-6">
-
-                          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
-                            <div>
-                              <label className="mb-2 block text-xs font-black uppercase text-slate-500">
-                                Quantité
-                              </label>
-
-                              <input
-                                type="number"
-                                min="0"
-                                value={
-                                  q
-                                }
-                                onChange={(e) =>
-                                  modifierAppareil(
-                                    appareil.id,
-                                    "quantite",
-                                    e.target
-                                      .value
-                                  )
-                                }
-                                className="w-full rounded-2xl border border-slate-300 bg-white p-4 font-black"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="mb-2 block text-xs font-black uppercase text-slate-500">
-                                Puissance
-                              </label>
-
-                              <input
-                                type="number"
-                                min="1"
-                                value={
-                                  w
-                                }
-                                onChange={(e) =>
-                                  modifierAppareil(
-                                    appareil.id,
-                                    "puissance",
-                                    e.target
-                                      .value
-                                  )
-                                }
-                                className="w-full rounded-2xl border border-slate-300 bg-white p-4 font-black"
-                              />
-
-                              <div className="mt-1 text-xs text-slate-400">
-                                W
-                              </div>
-                            </div>
-
-                            <div>
-                              <label className="mb-2 block text-xs font-black uppercase text-slate-500">
-                                Heures / jour
-                              </label>
-
-                              <input
-                                type="number"
-                                min="0"
-                                max="24"
-                                step="0.5"
-                                value={
-                                  h
-                                }
-                                onChange={(e) =>
-                                  modifierAppareil(
-                                    appareil.id,
-                                    "heures",
-                                    e.target
-                                      .value
-                                  )
-                                }
-                                className="w-full rounded-2xl border border-slate-300 bg-white p-4 font-black"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="mb-2 block text-xs font-black uppercase text-slate-500">
-                                Jours / semaine
-                              </label>
-
-                              <input
-                                type="number"
-                                min="1"
-                                max="7"
-                                value={
-                                  j
-                                }
-                                onChange={(e) =>
-                                  modifierAppareil(
-                                    appareil.id,
-                                    "jours",
-                                    e.target
-                                      .value
-                                  )
-                                }
-                                className="w-full rounded-2xl border border-slate-300 bg-white p-4 font-black"
-                              />
-                            </div>
-
-                          </div>
-
-                          <div className="mt-5">
-
-                            <label className="mb-2 block text-xs font-black uppercase text-slate-500">
-                              Période d'utilisation
-                            </label>
-
-                            <select
-                              value={
-                                periode ||
-                                "jour"
-                              }
-                              onChange={(e) =>
-                                modifierAppareil(
-                                  appareil.id,
-                                  "periode",
-                                  e.target
-                                    .value
-                                )
-                              }
-                              className="w-full rounded-2xl border border-slate-300 bg-white p-4 font-bold"
-                            >
-                              <option value="jour">
-                                ☀️ Principalement le jour
-                              </option>
-
-                              <option value="soir">
-                                🌙 Principalement le soir
-                              </option>
-
-                              <option value="mixte">
-                                ☀️🌙 Jour + soir/nuit
-                              </option>
-                            </select>
-
-                          </div>
-
-                          <div className="mt-6 grid gap-4 sm:grid-cols-3">
-
-                            <div className="rounded-2xl bg-blue-950 p-5 text-white">
-                              <div className="text-xs font-bold text-blue-300">
-                                Puissance
-                              </div>
-
-                              <div className="mt-2 text-2xl font-black">
-                                {formatNombre(
-                                  ((Number(q) ||
-                                    0) *
-                                    (Number(w) ||
-                                      0)) /
-                                    1000,
-                                  2
-                                )}{" "}
-                                kW
-                              </div>
-                            </div>
-
-                            <div className="rounded-2xl bg-orange-500 p-5 text-white">
-                              <div className="text-xs font-bold text-orange-100">
-                                Énergie
-                              </div>
-
-                              <div className="mt-2 text-2xl font-black">
-                                {formatNombre(
-                                  energie,
-                                  2
-                                )}{" "}
-                                kWh/j
-                              </div>
-                            </div>
-
-                            <div className="rounded-2xl bg-white p-5 ring-1 ring-slate-200">
-                              <div className="text-xs font-bold text-slate-400">
-                                Mensuel
-                              </div>
-
-                              <div className="mt-2 text-2xl font-black text-blue-950">
-                                {formatNombre(
-                                  energie *
-                                    30,
-                                  1
-                                )}{" "}
-                                kWh
-                              </div>
-                            </div>
-
-                          </div>
-
-                          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-
+                        <div className="w-full sm:max-w-[140px]">
+                          <label className="mb-2 block text-xs font-bold text-slate-600">
+                            Quantité
+                          </label>
+                          <div className="flex items-center gap-2">
                             <button
                               type="button"
+                              aria-label={`Diminuer ${appareil.nom}`}
                               onClick={() =>
-                                ajouterAppareil(
-                                  appareil
+                                modifierAppareil(
+                                  appareil.id,
+                                  "quantite",
+                                  Math.max(0, nombreValide(appareil.quantite) - 1)
                                 )
                               }
-                              className="flex-1 rounded-2xl bg-orange-500 px-6 py-4 font-black text-white"
+                              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-xl font-bold text-blue-900 hover:bg-blue-50"
                             >
-                              ✓ Ajouter à mon estimation
+                              −
                             </button>
-
-                            {appareilAjoute(
-                              appareil
-                            ) && (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  supprimerAppareil(
-                                    appareil.id
-                                  )
-                                }
-                                className="rounded-2xl border border-red-200 bg-white px-6 py-4 font-black text-red-600"
-                              >
-                                Retirer
-                              </button>
-                            )}
-
+                            <input
+                              type="number"
+                              min="0"
+                              max="999"
+                              value={appareil.quantite}
+                              onChange={(event) =>
+                                modifierAppareil(appareil.id, "quantite", event.target.value)
+                              }
+                              className="h-11 w-full min-w-0 rounded-xl border border-slate-200 px-2 text-center text-sm font-black outline-none focus:border-blue-600"
+                            />
+                            <button
+                              type="button"
+                              aria-label={`Augmenter ${appareil.nom}`}
+                              onClick={() =>
+                                modifierAppareil(
+                                  appareil.id,
+                                  "quantite",
+                                  nombreValide(appareil.quantite) + 1
+                                )
+                              }
+                              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-xl font-bold text-blue-900 hover:bg-blue-50"
+                            >
+                              +
+                            </button>
                           </div>
-
                         </div>
-                      </>
-                    );
-                  })()}
+                      </div>
 
+                      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                        <label className="block">
+                          <span className="mb-2 block text-xs font-bold text-slate-600">
+                            Puissance (W)
+                          </span>
+                          <input
+                            type="number"
+                            min="1"
+                            value={appareil.puissance}
+                            onChange={(event) =>
+                              modifierAppareil(appareil.id, "puissance", event.target.value)
+                            }
+                            className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-600"
+                          />
+                        </label>
+
+                        <label className="block">
+                          <span className="mb-2 block text-xs font-bold text-slate-600">
+                            Heures de jour
+                          </span>
+                          <input
+                            type="number"
+                            min="0"
+                            max="24"
+                            step="0.25"
+                            value={appareil.jour}
+                            onChange={(event) =>
+                              modifierAppareil(appareil.id, "jour", event.target.value)
+                            }
+                            className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-600"
+                          />
+                        </label>
+
+                        <label className="col-span-2 block sm:col-span-1">
+                          <span className="mb-2 block text-xs font-bold text-slate-600">
+                            Heures de nuit
+                          </span>
+                          <input
+                            type="number"
+                            min="0"
+                            max="24"
+                            step="0.25"
+                            value={appareil.nuit}
+                            onChange={(event) =>
+                              modifierAppareil(appareil.id, "nuit", event.target.value)
+                            }
+                            className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-600"
+                          />
+                        </label>
+                      </div>
+
+                      {nombreValide(appareil.quantite) > 0 && (
+                        <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600">
+                          Énergie quotidienne :{" "}
+                          <span className="text-blue-900">
+                            {fmt(
+                              (nombreValide(appareil.quantite) *
+                                nombreValide(appareil.puissance) *
+                                (Math.min(24, nombreValide(appareil.jour)) +
+                                  Math.min(24, nombreValide(appareil.nuit)))) /
+                                1000
+                            )}{" "}
+                            kWh
+                          </span>
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {appareilsPerso.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="mb-3 font-black text-blue-950">
+                      Vos appareils personnalisés
+                    </h3>
+                    <div className="space-y-3">
+                      {appareilsPerso.map((appareil) => (
+                        <div key={appareil.id} className="flex items-start justify-between gap-3 rounded-xl border border-orange-200 bg-orange-50 p-4">
+                          <div className="min-w-0">
+                            <p className="break-words font-bold text-blue-950">{appareil.nom}</p>
+                            <p className="mt-1 text-xs text-slate-600">
+                              {appareil.quantite} × {appareil.puissance} W · jour : {appareil.jour} h · nuit : {appareil.nuit} h
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => supprimerAppareil(appareil.id)}
+                            className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-100"
+                          >
+                            Supprimer
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-7 rounded-[1.5rem] border border-dashed border-blue-300 bg-blue-50/50 p-5 sm:p-6">
+                  <h3 className="text-lg font-black text-blue-950">
+                    Un appareil manque ?
+                  </h3>
+                  <p className="mt-1 text-sm leading-6 text-slate-500">
+                    Ajoute-le avec sa puissance et ses heures d'utilisation.
+                  </p>
+
+                  <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                    <Champ
+                      label="Nom de l'appareil"
+                      value={appareilPersonnalise.nom}
+                      onChange={(value) =>
+                        setAppareilPersonnalise((p) => ({ ...p, nom: value }))
+                      }
+                      placeholder="Ex. : Pompe de piscine"
+                    />
+                    <Champ
+                      label="Puissance unitaire (W)"
+                      value={appareilPersonnalise.puissance}
+                      onChange={(value) =>
+                        setAppareilPersonnalise((p) => ({ ...p, puissance: value }))
+                      }
+                      type="number"
+                      min="1"
+                    />
+                    <Champ
+                      label="Quantité"
+                      value={appareilPersonnalise.quantite}
+                      onChange={(value) =>
+                        setAppareilPersonnalise((p) => ({ ...p, quantite: value }))
+                      }
+                      type="number"
+                      min="1"
+                    />
+                    <Champ
+                      label="Heures de jour"
+                      value={appareilPersonnalise.jour}
+                      onChange={(value) =>
+                        setAppareilPersonnalise((p) => ({ ...p, jour: value }))
+                      }
+                      type="number"
+                      min="0"
+                      max="24"
+                      step="0.25"
+                    />
+                    <Champ
+                      label="Heures de nuit"
+                      value={appareilPersonnalise.nuit}
+                      onChange={(value) =>
+                        setAppareilPersonnalise((p) => ({ ...p, nuit: value }))
+                      }
+                      type="number"
+                      min="0"
+                      max="24"
+                      step="0.25"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={ajouterAppareil}
+                    className="mt-5 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-blue-800 bg-white px-5 py-3 text-sm font-bold text-blue-800 hover:bg-blue-50 sm:w-auto"
+                  >
+                    + Ajouter cet appareil
+                  </button>
+                </div>
+
+                <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-2xl bg-blue-950 p-4 text-white">
+                    <p className="text-xs font-bold text-blue-200">Énergie / jour</p>
+                    <p className="mt-2 text-2xl font-black">
+                      {fmt(calcul.kwhJour)} <span className="text-sm">kWh</span>
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-white p-4 ring-1 ring-slate-200">
+                    <p className="text-xs font-bold text-slate-500">Énergie / mois</p>
+                    <p className="mt-2 text-2xl font-black text-blue-950">
+                      {fmt(calcul.kwhMois)} <span className="text-sm">kWh</span>
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-orange-50 p-4 ring-1 ring-orange-100">
+                    <p className="text-xs font-bold text-orange-700">Appareils utilisés</p>
+                    <p className="mt-2 text-2xl font-black text-blue-950">
+                      {calcul.nombreAppareils}
+                    </p>
+                  </div>
+                </div>
+
+                {consommationDeclaree > 0 && (
+                  <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm leading-6 text-blue-950">
+                    La consommation du compteur ({fmt(consommationDeclaree)} kWh/mois)
+                    sera utilisée comme référence. Elle ne sera pas ajoutée une
+                    deuxième fois à la consommation des appareils.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ÉTAPE 4 */}
+            {etape === 4 && (
+              <form onSubmit={calculerDimensionnement}>
+                <SectionTitre
+                  numero="04"
+                  titre="Vos coordonnées"
+                  description="Pour recevoir votre étude et demander un devis personnalisé."
+                />
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Champ
+                    label="Nom et prénom"
+                    value={nom}
+                    onChange={setNom}
+                    placeholder="Votre nom complet"
+                    required
+                  />
+                  <Champ
+                    label="Téléphone / WhatsApp"
+                    value={telephone}
+                    onChange={setTelephone}
+                    placeholder="Ex. : +221 78 000 00 00"
+                    required
+                  />
+                  <Champ
+                    label="Ville / quartier"
+                    value={ville}
+                    onChange={setVille}
+                    placeholder="Ex. : Pikine, Dakar"
+                  />
+                  <Champ
+                    label="E-mail (facultatif)"
+                    value={email}
+                    onChange={setEmail}
+                    type="email"
+                    placeholder="vous@exemple.com"
+                  />
+                </div>
+
+                <label className="mt-5 block">
+                  <span className="mb-2 block text-sm font-bold text-slate-700">
+                    Précisions sur votre projet
+                  </span>
+                  <textarea
+                    value={precision}
+                    onChange={(event) => setPrecision(event.target.value)}
+                    rows={4}
+                    placeholder="Budget, autonomie souhaitée, coupures, profondeur du forage, besoins particuliers..."
+                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                  />
+                </label>
+
+                <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
+                  <h3 className="font-black text-blue-950">
+                    Récapitulatif avant calcul
+                  </h3>
+                  <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                    <div>
+                      <p className="text-xs text-slate-500">Profil</p>
+                      <p className="mt-1 text-sm font-black text-blue-950">
+                        {profil === "residentiel" ? "Résidentiel" : profil === "entreprise" ? "Entreprise" : "Pompage"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500">Compteur</p>
+                      <p className="mt-1 text-sm font-black text-blue-950">
+                        {compteur === "woyofal" ? "Woyofal" : compteur === "senelec" ? "Senelec" : "Aucun"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500">Référence retenue</p>
+                      <p className="mt-1 text-sm font-black text-blue-950">
+                        {fmt(kwhJourFinal)} kWh/j
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500">Appareils utilisés</p>
+                      <p className="mt-1 text-sm font-black text-blue-950">
+                        {calcul.nombreAppareils}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="mt-4 text-xs leading-5 text-slate-500">
+                  Les résultats sont des calculs préliminaires. Le choix final
+                  doit être confirmé en fonction des caractéristiques réelles
+                  des appareils, des équipements solaires et du site.
+                </p>
+
+                <button
+                  type="submit"
+                  className="mt-6 flex min-h-[54px] w-full items-center justify-center gap-3 rounded-full bg-orange-500 px-6 py-4 text-sm font-black text-white shadow-lg shadow-orange-900/10 transition hover:bg-orange-600"
+                >
+                  Calculer mon dimensionnement <span>→</span>
+                </button>
+              </form>
+            )}
+
+            {erreurFormulaire && (
+              <div
+                role="alert"
+                className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold leading-6 text-red-700"
+              >
+                {erreurFormulaire}
+              </div>
+            )}
+
+            <div className="mt-8 flex flex-col-reverse gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:items-center sm:justify-between">
+              <button
+                type="button"
+                onClick={allerEtapePrecedente}
+                disabled={etape === 1}
+                className="min-h-[48px] rounded-full border border-slate-200 px-6 py-3 text-sm font-bold text-slate-600 transition hover:border-blue-700 hover:text-blue-800 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                ← Étape précédente
+              </button>
+
+              {etape < 4 && (
+                <button
+                  type="button"
+                  onClick={allerEtapeSuivante}
+                  className="min-h-[48px] rounded-full bg-blue-800 px-7 py-3 text-sm font-bold text-white shadow-lg shadow-blue-900/10 transition hover:bg-blue-900"
+                >
+                  Continuer →
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* PANNEAU LATÉRAL */}
+          <aside className="space-y-5 lg:sticky lg:top-24">
+            <div className="rounded-[1.75rem] bg-blue-950 p-6 text-white shadow-xl">
+              <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-orange-400">
+                Votre consommation
+              </p>
+              <p className="mt-4 text-4xl font-black">{fmt(calcul.kwhJour)}</p>
+              <p className="mt-1 text-sm text-blue-200">kWh calculés par jour</p>
+
+              <div className="my-5 h-px bg-white/10" />
+
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm text-blue-200">Énergie mensuelle</span>
+                <strong className="text-sm">{fmt(calcul.kwhMois)} kWh</strong>
+              </div>
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <span className="text-sm text-blue-200">Appareils sélectionnés</span>
+                <strong className="text-sm">{calcul.nombreAppareils}</strong>
+              </div>
+
+              <div className="mt-6 rounded-xl border border-white/10 bg-white/[0.06] p-4">
+                <p className="text-xs leading-5 text-blue-100/80">
+                  Le résultat évolue lorsque tu modifies les puissances,
+                  les quantités ou les durées d'utilisation.
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-[1.75rem] border border-slate-200 bg-white p-6">
+              <h3 className="font-black text-blue-950">Besoin d'aide ?</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                Notre équipe peut t'aider à préciser tes besoins et à vérifier
+                le choix du matériel.
+              </p>
+              <a
+                href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent("Bonjour Solar Smart, j'ai besoin d'aide pour mon estimation solaire.")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-5 flex min-h-[48px] items-center justify-center gap-2 rounded-full bg-green-500 px-5 py-3 text-sm font-black text-white transition hover:bg-green-600"
+              >
+                WhatsApp <span>→</span>
+              </a>
+              <a
+                href={`mailto:${EMAIL}`}
+                className="mt-3 block break-all text-center text-sm font-semibold text-blue-800 hover:text-orange-500"
+              >
+                {EMAIL}
+              </a>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      {/* RÉSULTATS */}
+      {resultatVisible && (
+        <section
+          id="resultat-dimensionnement"
+          className="scroll-mt-24 bg-white px-4 py-12 sm:px-6 sm:py-16 lg:px-8"
+        >
+          <div className="mx-auto w-full max-w-7xl">
+            <div className="overflow-hidden rounded-[2rem] bg-slate-950 p-6 text-white sm:p-10 lg:p-12">
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                  <span className="inline-flex rounded-full bg-orange-500/10 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.16em] text-orange-400">
+                    Résultat de votre calcul
+                  </span>
+                  <h2 className="mt-5 text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl">
+                    Votre dimensionnement
+                    <span className="block text-orange-400">préliminaire.</span>
+                  </h2>
+                  <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
+                    Bonjour {nom}. Voici les besoins calculés à partir des
+                    données renseignées. Les caractéristiques du matériel
+                    devront être validées avant de choisir définitivement un kit.
+                  </p>
+                </div>
+
+                <a
+                  href={urlWhatsAppDevis}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-[52px] items-center justify-center gap-3 rounded-full bg-green-500 px-7 py-4 text-sm font-black text-white transition hover:bg-green-600"
+                >
+                  Demander mon devis sur WhatsApp <span>→</span>
+                </a>
+              </div>
+
+              <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {[
+                  [
+                    "Énergie quotidienne",
+                    `${fmt(kwhJourFinal)} kWh`,
+                    "Besoin énergétique de référence par jour.",
+                  ],
+                  [
+                    "Énergie mensuelle",
+                    `${fmt(kwhMoisFinal)} kWh`,
+                    "Référence mensuelle utilisée pour le calcul.",
+                  ],
+                  [
+                    "Panneaux de 550 W",
+                    `${panneauxFinal}`,
+                    "Quantité indicative selon les hypothèses solaires.",
+                  ],
+                  [
+                    "Puissance photovoltaïque",
+                    `${fmt(kwcFinal)} kWc`,
+                    "Puissance théorique du champ de panneaux.",
+                  ],
+                  [
+                    "Batterie",
+                    `${fmt(batterieFinale)} kWh`,
+                    "Capacité nominale indicative selon l'énergie nocturne estimée.",
+                  ],
+                  [
+                    "Onduleur",
+                    `${fmt(puissanceOnduleurFinale)} kW`,
+                    "Base calculée à partir de la puissance cumulée des appareils renseignés.",
+                  ],
+                ].map(([titre, valeur, description]) => (
+                  <div key={titre} className="rounded-2xl border border-white/10 bg-white/[0.06] p-5">
+                    <p className="text-xs font-bold leading-5 text-blue-200">{titre}</p>
+                    <p className="mt-3 break-words text-2xl font-black text-white sm:text-3xl">{valeur}</p>
+                    <p className="mt-2 text-xs leading-5 text-slate-400">{description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-8 grid gap-6 lg:grid-cols-2">
+              <div className="rounded-[1.75rem] border border-slate-200 bg-white p-6 sm:p-8">
+                <h3 className="text-xl font-black text-blue-950">
+                  Comprendre le résultat
+                </h3>
+
+                <div className="mt-6 space-y-5">
+                  <div>
+                    <p className="font-bold text-blue-950">1. Panneaux solaires</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-500">
+                      Le calcul utilise cinq heures solaires équivalentes par
+                      jour et une marge de 30 % pour les pertes. Ces hypothèses
+                      ne remplacent pas une étude d'ensoleillement, d'orientation
+                      et d'ombrage du site.
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="font-bold text-blue-950">2. Batterie</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-500">
+                      Le stockage estimé dépend de la consommation nocturne
+                      déclarée. Si les horaires ne sont pas renseignés, une
+                      hypothèse de 50 % de la consommation journalière est utilisée.
+                      L'autonomie réelle doit être définie avec le client.
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="font-bold text-blue-950">3. Onduleur</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-500">
+                      La puissance affichée repose sur la somme des puissances
+                      nominales avec une marge de 25 %. Les appels de courant
+                      des moteurs, climatiseurs et pompes doivent être vérifiés.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-[1.75rem] border border-orange-200 bg-orange-50 p-6 sm:p-8">
+                <h3 className="text-xl font-black text-blue-950">
+                  Validation technique nécessaire
+                </h3>
+                <p className="mt-3 text-sm leading-7 text-slate-600">
+                  Le calcul est un pré-dimensionnement et non un devis ferme.
+                  Le choix final doit tenir compte des fiches techniques,
+                  de l'autonomie, des protections électriques, des câbles,
+                  des appels de courant et des conditions du site.
+                </p>
+
+                <div className="mt-5 space-y-3 text-sm font-semibold text-blue-950">
+                  {[
+                    "Vérifier les puissances et la consommation réelle.",
+                    "Vérifier le champ photovoltaïque.",
+                    "Vérifier l'onduleur et la batterie.",
+                    "Confirmer la disponibilité du kit proposé.",
+                  ].map((ligne) => (
+                    <div key={ligne} className="flex items-start gap-3">
+                      <span className="mt-0.5 text-orange-500">✓</span>
+                      <span>{ligne}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <a
+                  href={urlWhatsAppDevis}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-7 flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-blue-800 px-6 py-4 text-sm font-black text-white transition hover:bg-blue-900"
+                >
+                  Faire vérifier mon installation <span>→</span>
+                </a>
+              </div>
+            </div>
+
+            {/* PRODUITS DU CATALOGUE */}
+            <div className="mt-12">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <span className="inline-flex rounded-full bg-orange-100 px-4 py-2 text-xs font-extrabold uppercase tracking-wider text-orange-600">
+                    Catalogue Solar Smart
+                  </span>
+                  <h3 className="mt-4 text-2xl font-black text-blue-950 sm:text-3xl">
+                    Kits correspondant à votre besoin
+                  </h3>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+                    Les propositions automatiques utilisent le profil et la
+                    capacité énergétique déclarée dans le catalogue. Les autres
+                    caractéristiques doivent aussi être confirmées.
+                  </p>
+                </div>
+
+                <Link href="/#produits" className="text-sm font-black text-blue-800 hover:text-orange-500">
+                  Voir tout le catalogue →
+                </Link>
+              </div>
+
+              {loadingProduits && (
+                <div className="mt-6 rounded-2xl bg-slate-50 p-6 text-sm font-semibold text-slate-500">
+                  Chargement du catalogue...
                 </div>
               )}
 
-            </section>
-          )}
-
-          {/* CONFIGURATION SOLAIRE */}
-
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-
-            <div className="text-xs font-black uppercase tracking-widest text-orange-500">
-              05 — Configuration solaire
-            </div>
-
-            <h2 className="mt-2 text-2xl font-black text-blue-950">
-              Paramètres photovoltaïques
-            </h2>
-
-            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-
-              <div className="rounded-3xl bg-slate-50 p-5">
-
-                <label className="text-xs font-black uppercase text-slate-500">
-                  Panneau
-                </label>
-
-                <div className="mt-3 grid grid-cols-3 gap-2">
-
-                  {PANNEAUX.map(
-                    (w) => (
-                      <button
-                        key={w}
-                        type="button"
-                        onClick={() =>
-                          setPanneauW(
-                            w
-                          )
-                        }
-                        className={`rounded-xl p-3 text-sm font-black ${
-                          panneauW ===
-                          w
-                            ? "bg-orange-500 text-white"
-                            : "bg-white text-blue-950 ring-1 ring-slate-200"
-                        }`}
-                      >
-                        {w}W
-                      </button>
-                    )
-                  )}
-
+              {!loadingProduits && erreurProduits && (
+                <div className="mt-6 rounded-2xl border border-orange-200 bg-orange-50 p-5 text-sm leading-6 text-orange-900">
+                  {erreurProduits}{" "}
+                  <Link href="/#produits" className="font-black underline">
+                    Consulter le catalogue.
+                  </Link>
                 </div>
+              )}
 
-              </div>
-
-              <div className="rounded-3xl bg-slate-50 p-5">
-
-                <label className="text-xs font-black uppercase text-slate-500">
-                  Inclinaison
-                </label>
-
-                <input
-                  type="number"
-                  min="0"
-                  max="90"
-                  value={
-                    angle
-                  }
-                  onChange={(e) =>
-                    setAngle(
-                      e.target
-                        .value
-                    )
-                  }
-                  className="mt-3 w-full rounded-2xl border border-slate-300 bg-white p-4 font-black"
-                />
-
-                <div className="mt-2 text-xs text-slate-400">
-                  0° à 90°
-                </div>
-
-              </div>
-
-              <div className="rounded-3xl bg-slate-50 p-5">
-
-                <label className="text-xs font-black uppercase text-slate-500">
-                  Orientation
-                </label>
-
-                <select
-                  value={
-                    aspect
-                  }
-                  onChange={(e) =>
-                    setAspect(
-                      e.target
-                        .value
-                    )
-                  }
-                  className="mt-3 w-full rounded-2xl border border-slate-300 bg-white p-4 font-black"
-                >
-                  <option value="-90">
-                    Est
-                  </option>
-
-                  <option value="0">
-                    Sud
-                  </option>
-
-                  <option value="90">
-                    Ouest
-                  </option>
-                </select>
-
-                <div className="mt-2 text-xs text-slate-400">
-                  PVGIS : 0° = Sud
-                </div>
-
-              </div>
-
-            </div>
-
-            <div className="mt-4 rounded-3xl bg-slate-50 p-5">
-
-              <label className="text-xs font-black uppercase text-slate-500">
-                Pertes système
-              </label>
-
-              <div className="mt-3 flex items-center gap-4">
-
-                <input
-                  type="range"
-                  min="0"
-                  max="30"
-                  value={
-                    pertes
-                  }
-                  onChange={(e) =>
-                    setPertes(
-                      e.target
-                        .value
-                    )
-                  }
-                  className="flex-1"
-                />
-
-                <div className="w-20 rounded-xl bg-blue-950 p-3 text-center font-black text-white">
-                  {pertes}%
-                </div>
-
-              </div>
-
-              <div className="mt-2 text-xs text-slate-400">
-                Câbles, température, conversion,
-                poussière et autres pertes globales.
-              </div>
-
-            </div>
-
-          </section>
-
-          {/* ERREUR */}
-
-          {erreur && (
-            <div className="rounded-3xl border border-red-200 bg-red-50 p-5 font-bold text-red-800">
-              ⚠️ {erreur}
-            </div>
-          )}
-
-          {/* BOUTON */}
-
-          <button
-            type="button"
-            disabled={
-              chargement
-            }
-            onClick={
-              lancerEstimation
-            }
-            className="w-full rounded-3xl bg-orange-500 px-6 py-6 text-lg font-black text-white shadow-xl shadow-orange-200 hover:bg-orange-600 disabled:opacity-60"
-          >
-            {chargement
-              ? "☀️ Analyse PVGIS en cours..."
-              : "Calculer mon estimation complète →"}
-          </button>
-
-          {/* RESULTATS */}
-
-          {resultat && (
-            <section className="space-y-6">
-
-              {/* RESUME */}
-
-              <div className="rounded-3xl bg-blue-950 p-7 text-white shadow-xl">
-
-                <div className="text-xs font-black uppercase tracking-widest text-blue-300">
-                  Résultat
-                </div>
-
-                <h2 className="mt-2 text-3xl font-black">
-                  Votre profil énergétique
-                </h2>
-
-                <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
-                  <div className="rounded-2xl bg-white/10 p-5">
-                    <div className="text-xs text-blue-300">
-                      Consommation
-                    </div>
-
-                    <div className="mt-2 text-2xl font-black">
-                      {formatNombre(
-                        resultat.kwhMois
-                      )}{" "}
-                      kWh/mois
-                    </div>
+              {!loadingProduits &&
+                !erreurProduits &&
+                produitsRecommandes.length === 0 && (
+                  <div className="mt-6 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-7">
+                    <p className="font-black text-blue-950">
+                      Aucun kit n'a pu être confirmé automatiquement.
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-slate-500">
+                      Cela peut signifier qu'aucun kit du profil choisi ne
+                      possède une capacité déclarée suffisante, ou que les
+                      caractéristiques du catalogue sont incomplètes. Nous
+                      préférons ne pas présenter un kit inadapté comme compatible.
+                    </p>
+                    <a
+                      href={urlWhatsAppDevis}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-4 inline-flex rounded-full bg-green-500 px-5 py-3 text-sm font-bold text-white hover:bg-green-600"
+                    >
+                      Demander une étude personnalisée
+                    </a>
                   </div>
+                )}
 
-                  <div className="rounded-2xl bg-white/10 p-5">
-                    <div className="text-xs text-blue-300">
-                      Moyenne
-                    </div>
+              {!loadingProduits && produitsRecommandes.length > 0 && (
+                <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  {produitsRecommandes.map((produit, index) => {
+                    const nomKit = nomProduit(produit);
+                    const prix = prixProduit(produit);
+                    const energie = energieProduit(produit);
+                    const pv = puissancePanneauxProduit(produit);
+                    const batterie = batterieProduit(produit);
+                    const onduleur = onduleurProduit(produit);
+                    const image =
+                      produit?.image_url ||
+                      produit?.image ||
+                      produit?.photo;
 
-                    <div className="mt-2 text-2xl font-black">
-                      {formatNombre(
-                        resultat.energieJour
-                      )}{" "}
-                      kWh/j
-                    </div>
-                  </div>
+                    const detailsConnus = [
+                      energie !== null,
+                      pv !== null,
+                      batterie !== null,
+                      onduleur !== null,
+                    ].filter(Boolean).length;
 
-                  <div className="rounded-2xl bg-white/10 p-5">
-                    <div className="text-xs text-blue-300">
-                      Pointe
-                    </div>
-
-                    <div className="mt-2 text-2xl font-black">
-                      {formatNombre(
-                        resultat.puissanceMaxW /
-                          1000,
-                        2
-                      )}{" "}
-                      kW
-                    </div>
-                  </div>
-
-                  <div className="rounded-2xl bg-white/10 p-5">
-                    <div className="text-xs text-blue-300">
-                      Facture modélisée
-                    </div>
-
-                    <div className="mt-2 text-xl font-black">
-                      {formatFCFA(
-                        resultat.factureModelee
-                      )}
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-
-              {/* PVGIS */}
-
-              <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-
-                <div className="text-xs font-black uppercase tracking-widest text-orange-500">
-                  PVGIS
-                </div>
-
-                <h3 className="mt-2 text-2xl font-black text-blue-950">
-                  Production solaire du site
-                </h3>
-
-                <p className="mt-2 text-sm text-slate-500">
-                  Production spécifique estimée :
-                  <strong className="ml-1 text-blue-950">
-                    {formatNombre(
-                      resultat.production1kWpAn
-                    )}{" "}
-                    kWh/an/kWc
-                  </strong>
-                </p>
-
-                <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
-
-                  {resultat.productionMensuelle.map(
-                    (
-                      value,
-                      index
-                    ) => {
-                      const max =
-                        Math.max(
-                          ...resultat.productionMensuelle,
-                          1
-                        );
-
-                      return (
-                        <div
-                          key={
-                            MOIS[
-                              index
-                            ]
-                          }
-                          className="rounded-2xl bg-slate-50 p-4"
-                        >
-
-                          <div className="text-xs font-black text-slate-400">
-                            {
-                              MOIS[
-                                index
-                              ]
-                            }
-                          </div>
-
-                          <div className="mt-2 font-black text-blue-950">
-                            {formatNombre(
-                              value
-                            )}{" "}
-                            kWh/kWc
-                          </div>
-
-                          <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
-
-                            <div
-                              className="h-full rounded-full bg-orange-500"
-                              style={{
-                                width:
-                                  `${
-                                    (value /
-                                      max) *
-                                    100
-                                  }%`,
-                              }}
-                            />
-
-                          </div>
-
-                        </div>
-                      );
-                    }
-                  )}
-
-                </div>
-
-              </section>
-
-              {/* PROFIL */}
-
-              <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-
-                <div className="text-xs font-black uppercase tracking-widest text-orange-500">
-                  Profil de charge
-                </div>
-
-                <h3 className="mt-2 text-2xl font-black text-blue-950">
-                  Consommation moyenne par heure
-                </h3>
-
-                <div className="mt-6 grid grid-cols-6 gap-2 sm:grid-cols-12">
-
-                  {resultat.profil24h.map(
-                    (item) => {
-                      const max =
-                        Math.max(
-                          ...resultat.profil24h.map(
-                            (
-                              x
-                            ) =>
-                              x.kWh
-                          ),
-                          0.01
-                        );
-
-                      return (
-                        <div
-                          key={
-                            item.heure
-                          }
-                          className="text-center"
-                        >
-
-                          <div className="flex h-32 items-end justify-center">
-
-                            <div
-                              className="w-full max-w-5 rounded-t-lg bg-blue-950"
-                              style={{
-                                height:
-                                  `${Math.max(
-                                    3,
-                                    (item.kWh /
-                                      max) *
-                                      100
-                                  )}%`,
-                              }}
-                            />
-
-                          </div>
-
-                          <div className="mt-2 text-[9px] font-black text-slate-400">
-                            {String(
-                              item.heure
-                            ).padStart(
-                              2,
-                              "0"
-                            )}
-                          </div>
-
-                        </div>
-                      );
-                    }
-                  )}
-
-                </div>
-
-              </section>
-
-              {/* SCENARIOS */}
-
-              <section>
-
-                <div className="mb-5">
-
-                  <div className="text-xs font-black uppercase tracking-widest text-orange-500">
-                    Dimensionnement
-                  </div>
-
-                  <h3 className="mt-2 text-2xl font-black text-blue-950">
-                    Trois scénarios à comparer
-                  </h3>
-
-                  <p className="mt-2 text-sm text-slate-500">
-                    Le calcul utilise maintenant la
-                    production PVGIS horaire et simule
-                    directement la consommation, la
-                    batterie et l'énergie restante du réseau.
-                  </p>
-
-                </div>
-
-                <div className="grid gap-5 lg:grid-cols-3">
-
-                  {resultat.scenarios.map(
-                    (
-                      scenario
-                    ) => (
+                    return (
                       <article
-                        key={
-                          scenario.id
-                        }
-                        className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
+                        key={produit.id || `${nomKit}-${index}`}
+                        className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
                       >
-
-                        <div className="bg-blue-950 p-6 text-white">
-
-                          <h4 className="text-xl font-black">
-                            {
-                              scenario.nom
-                            }
-                          </h4>
-
-                          <p className="mt-2 text-sm leading-6 text-blue-200">
-                            {
-                              scenario.description
-                            }
-                          </p>
-
-                        </div>
-
-                        <div className="space-y-3 p-6">
-
-                          <div className="flex justify-between rounded-2xl bg-slate-50 p-4">
-                            <span>
-                              PV
-                            </span>
-
-                            <strong>
-                              {formatNombre(
-                                scenario.pvKw,
-                                2
-                              )}{" "}
-                              kWc
-                            </strong>
-                          </div>
-
-                          <div className="flex justify-between rounded-2xl bg-slate-50 p-4">
-                            <span>
-                              Panneaux
-                            </span>
-
-                            <strong>
-                              {
-                                scenario.nombrePanneaux
-                              }{" "}
-                              ×{" "}
-                              {
-                                scenario.puissancePanneau
-                              }{" "}
-                              W
-                            </strong>
-                          </div>
-
-                          <div className="flex justify-between rounded-2xl bg-slate-50 p-4">
-                            <span>
-                              Batterie
-                            </span>
-
-                            <strong>
-                              {formatNombre(
-                                scenario.batterieKwh
-                              )}{" "}
-                              kWh
-                            </strong>
-                          </div>
-
-                          <div className="flex justify-between rounded-2xl bg-slate-50 p-4">
-                            <span>
-                              Onduleur
-                            </span>
-
-                            <strong>
-                              {formatNombre(
-                                scenario.onduleurKw
-                              )}{" "}
-                              kW
-                            </strong>
-                          </div>
-
-                          <div className="flex justify-between rounded-2xl bg-slate-50 p-4">
-                            <span>
-                              Onduleur
-                            </span>
-
-                            <strong>
-                              {formatNombre(
-                                scenario.onduleurKva
-                              )}{" "}
-                              kVA
-                            </strong>
-                          </div>
-
-                          <div className="rounded-2xl bg-blue-50 p-4">
-
-                            <div className="text-xs font-black uppercase text-blue-600">
-                              Couverture simulée
-                            </div>
-
-                            <div className="mt-1 text-2xl font-black text-blue-950">
-                              {formatNombre(
-                                scenario.couvertureReelle
-                              )}%
-                            </div>
-
-                          </div>
-
-                          <div className="rounded-2xl bg-green-50 p-4">
-
-                            <div className="text-xs font-black uppercase text-green-700">
-                              Énergie encore achetée
-                            </div>
-
-                            <div className="mt-1 text-xl font-black text-green-800">
-                              {formatNombre(
-                                scenario.energieReseau
-                              )}{" "}
-                              kWh/an
-                            </div>
-
-                          </div>
-
-                          <div className="rounded-2xl bg-orange-50 p-4">
-
-                            <div className="text-xs font-black uppercase text-orange-700">
-                              Économie théorique
-                            </div>
-
-                            <div className="mt-1 text-xl font-black text-orange-800">
-                              {formatFCFA(
-                                scenario.economieMensuelle
-                              )}
-                              /mois
-                            </div>
-
-                          </div>
-
-                          {scenario.presenceMoteur && (
-                            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs font-bold leading-5 text-amber-900">
-                              ⚠️ Présence d'un moteur,
-                              d'une pompe ou d'un
-                              compresseur : les courants
-                              de démarrage doivent être
-                              vérifiés avant de choisir
-                              l'onduleur définitif.
+                        <div className="relative flex h-48 items-center justify-center overflow-hidden bg-slate-50">
+                          {image ? (
+                            <img
+                              src={image}
+                              alt={nomKit}
+                              loading="lazy"
+                              className="h-full w-full object-contain p-5"
+                            />
+                          ) : (
+                            <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-blue-50 text-4xl">
+                              ☀️
                             </div>
                           )}
 
+                          <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-blue-900 shadow">
+                            {estPompage(produit) ? "Pompage solaire" : "Kit solaire"}
+                          </span>
                         </div>
 
+                        <div className="p-5">
+                          <h4 className="break-words text-lg font-black text-blue-950">
+                            {nomKit}
+                          </h4>
+
+                          {prix !== null && (
+                            <p className="mt-2 text-base font-black text-orange-500">
+                              {FCFA(prix)}
+                            </p>
+                          )}
+
+                          {energie !== null && (
+                            <p className="mt-3 text-sm font-semibold text-slate-600">
+                              Capacité déclarée : {fmt(energie)} kWh/jour
+                            </p>
+                          )}
+
+                          {pv !== null && (
+                            <p className="mt-2 text-xs text-slate-500">
+                              Panneaux : {fmt(pv)} Wc
+                            </p>
+                          )}
+
+                          {batterie !== null && (
+                            <p className="mt-1 text-xs text-slate-500">
+                              Batterie : {fmt(batterie)} kWh
+                            </p>
+                          )}
+
+                          {onduleur !== null && (
+                            <p className="mt-1 text-xs text-slate-500">
+                              Onduleur : {fmt(onduleur)} kW
+                            </p>
+                          )}
+
+                          <div className="mt-4 rounded-xl bg-blue-50 p-3">
+                            <p className="text-xs font-bold text-blue-950">
+                              Besoin estimé : {fmt(kwhJourFinal)} kWh/jour
+                            </p>
+                            <p className="mt-1 text-xs leading-5 text-slate-600">
+                              {detailsConnus === 4
+                                ? "Les principales caractéristiques sont renseignées. Une validation technique finale reste nécessaire."
+                                : "Certaines caractéristiques sont absentes du catalogue. Leur compatibilité doit être vérifiée avant de confirmer ce kit."}
+                            </p>
+                          </div>
+
+                          <a
+                            href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(
+                              `Bonjour Solar Smart, je souhaite étudier le kit "${nomKit}". Mon besoin estimé est de ${fmt(kwhJourFinal)} kWh/jour, avec une puissance photovoltaïque théorique de ${fmt(kwcFinal)} kWc. Merci de vérifier la compatibilité, le stockage, l'onduleur et le prix.`
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-5 flex min-h-[46px] items-center justify-center gap-2 rounded-xl bg-blue-950 px-4 py-3 text-sm font-bold text-white transition hover:bg-blue-800"
+                          >
+                            Demander un devis <span>→</span>
+                          </a>
+                        </div>
                       </article>
-                    )
-                  )}
-
+                    );
+                  })}
                 </div>
-
-              </section>
-
-              {/* FACTURE */}
-
-              {resultat.montantFacture >
-                0 && (
-                <section className="rounded-3xl border border-blue-200 bg-blue-50 p-6">
-
-                  <div className="text-xl font-black text-blue-950">
-                    Vérification de votre facture
-                  </div>
-
-                  <div className="mt-3 text-sm text-blue-800">
-                    Montant déclaré :
-                    <strong className="ml-1">
-                      {formatFCFA(
-                        resultat.montantFacture
-                      )}
-                    </strong>
-                  </div>
-
-                  <div className="mt-1 text-sm text-blue-800">
-                    Modèle selon la consommation et
-                    le tarif :
-                    <strong className="ml-1">
-                      {formatFCFA(
-                        resultat.factureModelee
-                      )}
-                    </strong>
-                  </div>
-
-                  <div className="mt-3 text-xs leading-5 text-blue-700">
-                    Le montant réel peut différer en
-                    fonction des éléments présents sur
-                    la facture. La consommation en kWh
-                    reste la donnée principale utilisée
-                    pour le dimensionnement énergétique.
-                  </div>
-
-                </section>
               )}
+            </div>
 
-              {/* AVERTISSEMENT */}
-
-              <section className="rounded-3xl border border-amber-200 bg-amber-50 p-6">
-
-                <div className="text-xl font-black text-amber-950">
-                  ⚠️ Pré-dimensionnement technique
+            {/* CONTACT FINAL */}
+            <div className="mt-12 overflow-hidden rounded-[2rem] bg-gradient-to-r from-blue-950 via-blue-900 to-blue-800 p-6 sm:p-9">
+              <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
+                <div className="max-w-2xl">
+                  <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-orange-400">
+                    Solar Smart · Sénégal
+                  </p>
+                  <h3 className="mt-3 text-2xl font-black text-white sm:text-3xl">
+                    Passons de votre calcul à votre projet.
+                  </h3>
+                  <p className="mt-3 text-sm leading-6 text-blue-100/75">
+                    Transmettez vos résultats à notre équipe pour une étude
+                    technique et un devis personnalisé.
+                  </p>
                 </div>
-
-                <p className="mt-3 text-sm leading-7 text-amber-900">
-                  Cette estimation est beaucoup plus
-                  proche d'une étude énergétique que
-                  l'ancien calcul annuel, mais elle ne
-                  remplace toujours pas une étude
-                  d'exécution. Pour un projet définitif,
-                  il faut vérifier notamment les
-                  caractéristiques exactes des panneaux,
-                  batteries et onduleurs, les sections de
-                  câbles, protections DC/AC, courant de
-                  court-circuit, tension MPPT, puissance
-                  de démarrage des moteurs, monophasé ou
-                  triphasé, structure et conditions
-                  réelles du site.
-                </p>
-
-              </section>
-
-              {/* WHATSAPP */}
-
-              <div className="flex flex-col gap-3 sm:flex-row">
 
                 <a
-                  href={`${WHATSAPP}?text=${encodeURIComponent(
-                    messageWhatsApp
-                  )}`}
+                  href={urlWhatsAppDevis}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 rounded-2xl bg-green-500 px-6 py-4 text-center font-black text-white"
+                  className="flex min-h-[52px] w-full shrink-0 items-center justify-center gap-2 rounded-full bg-green-500 px-6 py-4 text-sm font-black text-white transition hover:bg-green-600 sm:w-auto"
                 >
-                  Demander une vérification WhatsApp
+                  Envoyer mes résultats <span>→</span>
                 </a>
-
-                <Link
-                  href="/#produits"
-                  className="flex-1 rounded-2xl bg-blue-950 px-6 py-4 text-center font-black text-white"
-                >
-                  Voir les kits Solart Smart
-                </Link>
-
               </div>
-
-            </section>
-          )}
-
-        </div>
-      </section>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* FOOTER */}
+      <footer className="w-full bg-slate-950 text-white">
+        <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
+          <div className="grid gap-10 border-b border-white/10 pb-10 md:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <Link href="/" className="flex items-center gap-3 text-2xl font-black tracking-tight">
+                <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-white">
+                  <Image
+                    src="/logo.png"
+                    alt="Solar Smart"
+                    fill
+                    sizes="48px"
+                    className="object-contain p-1"
+                  />
+                </span>
+                <span>
+                  <span className="text-blue-400">Solar</span>{" "}
+                  <span className="text-orange-500">Smart</span>
+                </span>
+              </Link>
 
-      <footer className="bg-slate-950 px-5 py-12 text-center text-sm text-slate-400">
+              <p className="mt-4 max-w-md text-sm leading-7 text-slate-400">
+                Des solutions solaires adaptées à vos besoins au Sénégal :
+                kits solaires pour maison, entreprise et pompage solaire.
+              </p>
 
-        <div className="text-xl font-black text-white">
-          Solart{" "}
-          <span className="text-orange-500">
-            Smart
-          </span>
+              <a
+                href={`https://wa.me/${WHATSAPP}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-6 inline-flex min-h-[46px] items-center gap-2 rounded-full bg-green-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-green-600"
+              >
+                WhatsApp
+              </a>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-bold uppercase tracking-wider">
+                Navigation
+              </h3>
+              <div className="mt-5 space-y-3">
+                <Link href="/" className="block text-sm text-slate-400 transition hover:text-orange-400">
+                  Accueil
+                </Link>
+                <Link href="/#services" className="block text-sm text-slate-400 transition hover:text-orange-400">
+                  Services
+                </Link>
+                <Link href="/#produits" className="block text-sm text-slate-400 transition hover:text-orange-400">
+                  Produits
+                </Link>
+                <Link href="/estimation" className="block text-sm text-slate-400 transition hover:text-orange-400">
+                  Estimation
+                </Link>
+                <Link href="/#contact" className="block text-sm text-slate-400 transition hover:text-orange-400">
+                  Contact
+                </Link>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-bold uppercase tracking-wider">
+                Contact
+              </h3>
+              <div className="mt-5 space-y-4 text-sm text-slate-400">
+                <a
+                  href={`https://wa.me/${WHATSAPP}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block transition hover:text-orange-400"
+                >
+                  +221 78 711 07 07
+                </a>
+
+                <a
+                  href={`mailto:${EMAIL}`}
+                  className="block break-all transition hover:text-orange-400"
+                >
+                  {EMAIL}
+                </a>
+
+                <p className="leading-6">
+                  Pikine Icotaf 3,
+                  <br />
+                  Tally Mbaye Gakou,
+                  <br />
+                  en face du marché Sandika — Sénégal
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 pt-7 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
+            <p>
+              © {new Date().getFullYear()}{" "}
+              <span className="font-semibold text-slate-300">Solar Smart</span>.
+              Tous droits réservés.
+            </p>
+            <p>Énergie solaire au Sénégal</p>
+          </div>
         </div>
-
-        <div className="mt-2">
-          Énergie solaire
-        </div>
-
-        <div className="mt-5">
-          Pikine Icotaf 3, Tally Mbaye Gakou en Face Sandika
-        </div>
-
-        <div className="mt-2">
-          +221 78 593 25 25
-        </div>
-
-        <div className="mt-1">
-          galsenenergy221@gmail.com
-        </div>
-
       </footer>
-
     </main>
   );
 }
