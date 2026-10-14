@@ -8,7 +8,7 @@ import CartIcon from "@/components/CartIcon";
 import ProductCard from "@/components/ProductCard";
 
 const WHATSAPP = "221787110707";
-const EMAIL = "solartsmart.sn@gmail.com";
+const EMAIL = "solarsmart.sn@gmail.com";
 
 export default function Home() {
   const [produits, setProduits] = useState([]);

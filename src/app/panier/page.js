@@ -8,7 +8,7 @@ import { useCart } from "@/context/CartContext";
 import CartIcon from "@/components/CartIcon";
 
 const WHATSAPP = "221787110707";
-const EMAIL = "solartsmart.sn@gmail.com";
+const EMAIL = "solarsmart.sn@gmail.com";
 
 const ADRESSE =
   "Pikine Icotaf 3, Tally Mbaye Gakou, en face du marché Sandika, Sénégal";

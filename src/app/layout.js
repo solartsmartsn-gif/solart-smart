@@ -2,11 +2,11 @@ import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
 
 export const metadata = {
-  title: "Solart Smart | Solutions solaires au Sénégal",
+  title: "Solar Smart | Solutions solaires au Sénégal",
   description:
-    "Solart Smart propose des kits solaires maison et des solutions de pompage solaire au Sénégal.",
+    "Solar Smart propose des kits solaires maison et des solutions de pompage solaire au Sénégal.",
   keywords: [
-    "Solart Smart",
+    "Solar Smart",
     "solaire Sénégal",
     "kit solaire maison",
     "pompage solaire",
