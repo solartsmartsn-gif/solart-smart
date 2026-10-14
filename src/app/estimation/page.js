@@ -9,7 +9,6 @@ const WHATSAPP = "221787110707";
 
 export default function EstimationPage() {
   const [compteur, setCompteur] = useState("");
-  const [facture, setFacture] = useState(null);
   const [releves, setReleves] = useState({
     "813": "",
     "814": "",
@@ -45,13 +44,6 @@ export default function EstimationPage() {
       return;
     }
 
-    if (compteur === "Senelec" && !facture) {
-      setErreur(
-        "Veuillez sélectionner une photo ou un fichier de votre facture Senelec."
-      );
-      return;
-    }
-
     if (
       compteur === "Woyofal" &&
       !Object.values(releves).some((value) => value.trim())
@@ -64,9 +56,7 @@ export default function EstimationPage() {
 
     const detailsCompteur =
       compteur === "Senelec"
-        ? `Facture Senelec sélectionnée sur l'appareil : ${facture.name}
-
-IMPORTANT : la facture ne sera pas jointe automatiquement. Merci de la joindre manuellement dans WhatsApp.`
+        ? `Je vais joindre la photo ou le PDF de ma facture Senelec dans cette conversation WhatsApp.`
         : `Résultats saisis après utilisation des codes du compteur Woyofal :
 - Code 813 : ${releves["813"] || "Non renseigné"}
 - Code 814 : ${releves["814"] || "Non renseigné"}
@@ -167,12 +157,12 @@ Merci de me contacter pour étudier mon besoin et me proposer une solution adapt
                 [
                   "02",
                   "Ajoutez vos informations",
-                  "Joignez votre facture Senelec ou renseignez les résultats des codes Woyofal.",
+                  "Avec un compteur Senelec, gardez votre facture sous la main. Avec Woyofal, renseignez les résultats des codes.",
                 ],
                 [
                   "03",
                   "Envoyez sur WhatsApp",
-                  "Votre message de demande sera préparé pour notre équipe.",
+                  "Votre message est préparé. Avec Senelec, vous joignez votre facture directement dans WhatsApp avant d’envoyer.",
                 ],
               ].map(([n, titre, description]) => (
                 <div key={n} className="flex gap-4">
@@ -282,43 +272,39 @@ Merci de me contacter pour étudier mon besoin et me proposer une solution adapt
               </div>
             </fieldset>
 
-            {/* FACTURE SENELEC */}
+            {/* SENELEC : EXPLICATION POUR JOINDRE LA FACTURE DANS WHATSAPP */}
             {compteur === "Senelec" && (
               <div className="mt-6 rounded-2xl border border-blue-100 bg-blue-50/70 p-5">
-                <label
-                  htmlFor="facture"
-                  className="block text-sm font-extrabold text-blue-950"
-                >
-                  2. Ajouter votre facture Senelec *
-                </label>
+                <h3 className="text-sm font-extrabold text-blue-950">
+                  2. Votre facture Senelec
+                </h3>
 
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Choisissez une photo ou un fichier de votre facture depuis
-                  votre appareil.
+                  Vous n’avez rien à choisir ici. Votre facture s’envoie
+                  directement dans WhatsApp, une fois votre message ouvert.
+                  Gardez simplement la photo ou le PDF de votre facture dans
+                  votre téléphone.
                 </p>
 
-                <input
-                  id="facture"
-                  type="file"
-                  accept="image/*,.pdf"
-                  onChange={(e) => {
-                    setFacture(e.target.files?.[0] || null);
-                    setErreur("");
-                  }}
-                  className="mt-4 block w-full cursor-pointer rounded-xl border border-slate-200 bg-white text-sm text-slate-700 file:mr-4 file:border-0 file:bg-blue-950 file:px-4 file:py-3 file:font-bold file:text-white hover:file:bg-blue-900"
-                />
+                <ol className="mt-4 space-y-3">
+                  {[
+                    "Remplissez vos coordonnées ci-dessous.",
+                    "Cliquez sur « Envoyer ma demande sur WhatsApp ».",
+                    "Dans WhatsApp, appuyez sur le trombone (ou sur le « + »).",
+                    "Choisissez Galerie ou Document, puis votre facture.",
+                    "Appuyez sur Envoyer.",
+                  ].map((etape, index) => (
+                    <li key={etape} className="flex items-start gap-3">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-950 text-xs font-black text-white">
+                        {index + 1}
+                      </span>
 
-                {facture && (
-                  <p className="mt-3 break-all text-sm font-semibold text-green-700">
-                    Fichier sélectionné : {facture.name}
-                  </p>
-                )}
-
-                <p className="mt-3 text-xs leading-5 text-slate-500">
-                  Pour protéger votre document, le fichier n’est pas téléversé
-                  sur ce site. Après ouverture de WhatsApp, joignez-y
-                  manuellement la photo ou le PDF.
-                </p>
+                      <span className="text-sm font-semibold leading-6 text-slate-700">
+                        {etape}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
               </div>
             )}
 
@@ -469,6 +455,14 @@ Merci de me contacter pour étudier mon besoin et me proposer une solution adapt
                 className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700"
               >
                 {erreur}
+              </p>
+            )}
+
+            {/* RAPPEL VISIBLE POUR LA FACTURE SENELEC */}
+            {compteur === "Senelec" && (
+              <p className="mt-5 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-semibold leading-6 text-orange-800">
+                N’oubliez pas : après l’ouverture de WhatsApp, appuyez sur le
+                trombone et joignez votre facture avant d’envoyer.
               </p>
             )}
 
